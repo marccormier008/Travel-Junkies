@@ -1,0 +1,3241 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Junkies — Flight Log</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ac-red:       #D82F2E;
+    --ac-red-dark:  #b02323;
+    --ac-red-light: #fdf0f0;
+    --ac-black:     #1C1C1C;
+    --ac-charcoal:  #3D3D3D;
+    --ac-mid:       #6B6B6B;
+    --ac-light:     #A8A8A8;
+    --ac-rule:      #E0E0E0;
+    --ac-bg:        #F5F5F5;
+    --ac-white:     #FFFFFF;
+    --ac-couple:    #1C1C1C;
+    --radius-sm:    4px;
+    --radius-md:    6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans', sans-serif; background: var(--ac-bg); color: var(--ac-black); min-height: 100vh; font-size: 14px; }
+
+  /* ── TOP NAV BAR ── */
+  .topbar {
+    background: var(--ac-black);
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .maple-leaf {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ac-white);
+    letter-spacing: 0.01em;
+  }
+  .topbar-title span {
+    color: var(--ac-red);
+  }
+  .topbar-meta {
+    font-size: 11px;
+    color: var(--ac-light);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* ── RED ACCENT STRIP ── */
+  .red-strip {
+    background: var(--ac-red);
+    height: 3px;
+  }
+
+  /* ── TAB NAV ── */
+  .tab-nav {
+    background: var(--ac-white);
+    border-bottom: 1px solid var(--ac-rule);
+    padding: 0 2.5rem;
+    display: flex;
+    gap: 0;
+  }
+  .tab {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ac-mid);
+    padding: 14px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  .tab:hover { color: var(--ac-black); }
+  .tab.active { color: var(--ac-red); border-bottom-color: var(--ac-red); }
+
+  /* ── MAIN CONTENT ── */
+  .main { max-width: 1240px; margin: 0 auto; padding: 2rem 2.5rem; }
+
+  /* ── FILTER PILLS ── */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 2rem; flex-wrap: wrap; align-items: center; }
+  .filter-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ac-light); margin-right: 4px; }
+  .filter-btn {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border: 1.5px solid var(--ac-rule);
+    border-radius: var(--radius-sm);
+    background: var(--ac-white);
+    color: var(--ac-charcoal);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--ac-red); color: var(--ac-red); }
+  .filter-btn.active { background: var(--ac-red); color: var(--ac-white); border-color: var(--ac-red); }
+  .filter-btn.couple.active { background: var(--ac-black); border-color: var(--ac-black); color: var(--ac-white); }
+
+  /* ── SECTION LABELS ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ac-light);
+    margin-bottom: 10px;
+    padding-left: 2px;
+    border-left: 3px solid var(--ac-red);
+    padding-left: 8px;
+  }
+
+  /* ── METRIC CARDS ── */
+  .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+  .metric-grid-3 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+  .metric-card {
+    background: var(--ac-white);
+    border: 1px solid var(--ac-rule);
+    border-top: 3px solid var(--ac-rule);
+    padding: 18px 20px;
+    border-radius: var(--radius-md);
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card.hi {
+    border-top-color: var(--ac-red);
+  }
+  .metric-card.hi::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 22px 22px 0;
+    border-color: transparent var(--ac-red) transparent transparent;
+  }
+  .metric-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ac-mid); margin-bottom: 8px; }
+  .metric-value { font-size: 26px; font-weight: 300; color: var(--ac-black); letter-spacing: -0.02em; line-height: 1; }
+  .metric-card.hi .metric-value { color: var(--ac-red); }
+  .metric-sub { font-size: 11px; color: var(--ac-light); margin-top: 5px; }
+
+  /* ── CHART CARDS ── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 2rem; }
+  .chart-card {
+    background: var(--ac-white);
+    border: 1px solid var(--ac-rule);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--ac-charcoal);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--ac-rule);
+  }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ac-mid); }
+  .leg-dot { width: 10px; height: 3px; border-radius: 1px; flex-shrink: 0; }
+
+  /* ── BAR STATS ── */
+  .stat-row { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--ac-rule); }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-name { font-size: 12px; color: var(--ac-charcoal); min-width: 120px; }
+  .stat-bar-wrap { flex: 1; margin: 0 12px; height: 4px; background: var(--ac-bg); border-radius: 2px; overflow: hidden; }
+  .stat-bar { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .stat-num { font-size: 12px; font-weight: 600; color: var(--ac-charcoal); min-width: 32px; text-align: right; }
+
+  /* ── EDITOR ── */
+  #editorPanel { display: none; }
+  .editor-intro {
+    background: var(--ac-white);
+    border: 1px solid var(--ac-rule);
+    border-left: 4px solid var(--ac-red);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 13px;
+    color: var(--ac-mid);
+    line-height: 1.7;
+  }
+  .editor-intro strong { color: var(--ac-black); font-weight: 600; }
+  .editor-intro code { font-family: monospace; font-size: 12px; background: var(--ac-bg); padding: 1px 6px; border-radius: 3px; color: var(--ac-charcoal); }
+
+  .add-form {
+    background: var(--ac-white);
+    border: 1px solid var(--ac-rule);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .form-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ac-charcoal); margin-bottom: 1.25rem; padding-bottom: 10px; border-bottom: 1px solid var(--ac-rule); }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ac-mid); }
+  .form-group input, .form-group select {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--ac-rule);
+    border-radius: var(--radius-sm);
+    background: var(--ac-bg);
+    color: var(--ac-black);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--ac-red); background: var(--ac-white); }
+  .travelers-check { display: flex; gap: 14px; flex-wrap: wrap; }
+  .travelers-check label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; color: var(--ac-charcoal); }
+  .travelers-check input[type=checkbox] { accent-color: var(--ac-red); width: 14px; height: 14px; }
+  .btn {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 9px 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--ac-red); color: var(--ac-white); }
+  .btn-primary:hover { background: var(--ac-red-dark); }
+  .btn-danger { background: transparent; color: var(--ac-red); border: 1.5px solid var(--ac-red); font-size: 10px; padding: 4px 10px; }
+  .btn-danger:hover { background: var(--ac-red-light); }
+  .btn-export { background: var(--ac-black); color: var(--ac-white); margin-left: 8px; }
+  .btn-export:hover { background: var(--ac-charcoal); }
+  .btn-edit { background: transparent; color: var(--ac-mid); border: 1.5px solid var(--ac-rule); font-size: 10px; padding: 4px 10px; }
+  .btn-edit:hover { border-color: var(--ac-charcoal); color: var(--ac-black); }
+  .btn-save { background: var(--ac-black); color: var(--ac-white); font-size: 10px; padding: 4px 10px; }
+  .btn-save:hover { background: var(--ac-charcoal); }
+  .btn-cancel { background: transparent; color: var(--ac-mid); border: 1.5px solid var(--ac-rule); font-size: 10px; padding: 4px 10px; margin-left: 4px; }
+  .btn-cancel:hover { border-color: var(--ac-mid); }
+  .col-filter {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 11px;
+    padding: 4px 7px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.08);
+    color: var(--ac-white);
+    outline: none;
+    width: 100%;
+    min-width: 0;
+  }
+  .col-filter::placeholder { color: rgba(255,255,255,0.35); }
+  .col-filter:focus { border-color: var(--ac-red); background: rgba(255,255,255,0.14); }
+  .col-filter-sel {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 11px;
+    padding: 4px 4px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.08);
+    color: var(--ac-white);
+    outline: none;
+    width: 100%;
+    min-width: 0;
+  }
+  .col-filter-sel:focus { border-color: var(--ac-red); }
+  .col-filter-sel option { background: var(--ac-charcoal); color: var(--ac-white); }
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 12px;
+    padding: 3px 6px;
+    border: 1.5px solid var(--ac-red);
+    border-radius: var(--radius-sm);
+    background: var(--ac-white);
+    color: var(--ac-black);
+    outline: none;
+    width: 100%;
+    min-width: 60px;
+  }
+  .cell-input.narrow { max-width: 70px; }
+  .cell-cb { accent-color: var(--ac-red); width: 14px; height: 14px; cursor: pointer; }
+  tr.editing td { background: #fff8f8; }
+
+  .trip-table-wrap { background: var(--ac-white); border: 1px solid var(--ac-rule); border-radius: var(--radius-md); overflow: hidden; }
+  .trip-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .trip-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ac-white);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--ac-black);
+    border-bottom: 3px solid var(--ac-red);
+  }
+  .trip-table td { padding: 9px 14px; border-bottom: 1px solid var(--ac-rule); color: var(--ac-charcoal); vertical-align: middle; }
+  .trip-table tr:last-child td { border-bottom: none; }
+  .trip-table tr:hover td { background: var(--ac-red-light); }
+  .traveler-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 2px; margin: 1px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .tag-Marc { background: #e8f1fb; color: #1a3a6b; }
+  .tag-Annie { background: #e6f5ef; color: #0a4a30; }
+  .tag-Erika { background: #fdecea; color: #8c1a1a; }
+  .tag-Victoria { background: #f3edf7; color: #4a1a6b; }
+  .tag-Ryan { background: #fef3e6; color: #6b3a0a; }
+  .adj-badge { font-size: 10px; padding: 2px 7px; background: var(--ac-bg); color: var(--ac-light); border-radius: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .msg { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 12px; margin-bottom: 1rem; display: none; font-weight: 500; }
+  .msg.success { background: #e6f5ef; color: #0a4a30; border-left: 3px solid #0a4a30; display: block; }
+  .msg.error { background: var(--ac-red-light); color: var(--ac-red-dark); border-left: 3px solid var(--ac-red); display: block; }
+  .search-bar { display: flex; gap: 10px; margin-bottom: 1rem; align-items: center; }
+  .search-bar input {
+    flex: 1;
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--ac-rule);
+    border-radius: var(--radius-sm);
+    background: var(--ac-white);
+    color: var(--ac-black);
+    outline: none;
+  }
+  .search-bar input:focus { border-color: var(--ac-red); }
+  .trip-count { font-size: 11px; color: var(--ac-light); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+
+  @media (max-width: 640px) {
+    .main { padding: 1.25rem; }
+    .chart-grid { grid-template-columns: 1fr; }
+    .chart-card.full { grid-column: 1; }
+    .metric-grid, .metric-grid-3 { grid-template-columns: 1fr 1fr; }
+    .topbar { padding: 0 1.25rem; }
+    .tab-nav { padding: 0 1.25rem; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topbar">
+  <div class="topbar-brand">
+    <svg class="maple-leaf" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 5 L57 35 L88 28 L72 50 L95 65 L65 62 L68 90 L50 78 L32 90 L35 62 L5 65 L28 50 L12 28 L43 35 Z" fill="#D82F2E"></path>
+    </svg>
+    <span class="topbar-title">Travel Junkies <span>/ Flight Log</span></span>
+  </div>
+  <span class="topbar-meta" id="headerMeta">132 trips · 39 countries · 3,366,869 km flown</span>
+</nav>
+<div class="red-strip"></div>
+
+<!-- TAB NAV -->
+<div class="tab-nav">
+  <button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
+  <button class="tab" onclick="switchTab('editor')">Edit Trips</button>
+</div>
+
+<div class="main">
+
+  <!-- ── DASHBOARD ── -->
+  <div id="dashPanel" style="display: block;">
+    <div class="filter-bar">
+      <span class="filter-label">View:</span>
+      <button class="filter-btn active" onclick="setFilter('all')">All travelers</button>
+      <button class="filter-btn couple" onclick="setFilter('couple')">Marc &amp; Annie</button>
+      <button class="filter-btn" onclick="setFilter('Marc')">Marc</button>
+      <button class="filter-btn" onclick="setFilter('Annie')">Annie</button>
+      <button class="filter-btn" onclick="setFilter('Erika')">Erika</button>
+      <button class="filter-btn" onclick="setFilter('Victoria')">Victoria</button>
+      <button class="filter-btn" onclick="setFilter('Ryan')">Ryan</button>
+    </div>
+
+    <div class="section-label">Trips &amp; Destinations</div>
+    <div class="metric-grid" id="metricGrid1"><div class="metric-card"><div class="metric-label">Total trips</div><div class="metric-value">38</div><div class="metric-sub">Ryan</div></div><div class="metric-card"><div class="metric-label">Countries visited</div><div class="metric-value">21</div><div class="metric-sub">unique countries</div></div></div>
+
+    <div class="section-label" style="margin-top:1.75rem">Distance Flown — Round-trip from YUL</div>
+    <div class="metric-grid-3" id="metricGrid2"><div class="metric-card hi"><div class="metric-label">Total km flown (RT)</div><div class="metric-value">397,123 km</div><div class="metric-sub">round-trip from YUL</div></div><div class="metric-card"><div class="metric-label">Earth laps equivalent</div><div class="metric-value">9.9×</div><div class="metric-sub">× Earth circumference (40,075 km)</div></div></div>
+
+    <div class="chart-card full" id="travelerSummaryCard" style="display:none;margin-bottom:16px;">
+      <div class="chart-title">Traveler summary</div>
+      <div id="travelerSummaryTable"></div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card full">
+        <div class="chart-title">Trips per year</div>
+        <div class="legend" id="legYear"></div>
+        <div style="position:relative;height:200px"><canvas id="yearChart"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Trips per year — destinations</div>
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start">
+          <div>
+            <select id="yearSelect" class="col-filter-sel" onchange="drillYear(parseInt(this.value))"
+              style="width:100%;font-size:13px;padding:8px 10px;background:var(--ac-white);color:var(--ac-black);border:1.5px solid var(--ac-rule);border-radius:var(--radius-sm);">
+            </select>
+          </div>
+          <div id="yearDrill">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-light);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--ac-rule);">Select a year</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Countries visited by continent</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+          <div id="contBars">
+    <div class="stat-row cont-row" data-cont="North America" style="cursor: pointer;" onclick="drillContinent('North America')">
+      <span class="stat-name" style="min-width: 110px;">North America</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:100%;background:#D82F2E"></div></div>
+      <span class="stat-num" style="">17</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div>
+    <div class="stat-row cont-row" data-cont="Europe" style="cursor: pointer; background: var(--ac-red-light);" onclick="drillContinent('Europe')">
+      <span class="stat-name" style="min-width: 110px; color: var(--ac-red);">Europe</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:59%;background:#1C1C1C"></div></div>
+      <span class="stat-num" style="color: var(--ac-red);">10</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div>
+    <div class="stat-row cont-row" data-cont="Carribean" style="cursor: pointer;" onclick="drillContinent('Carribean')">
+      <span class="stat-name" style="min-width: 110px;">Carribean</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:24%;background:#3D3D3D"></div></div>
+      <span class="stat-num" style="">4</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div>
+    <div class="stat-row cont-row" data-cont="Asia" style="cursor: pointer;" onclick="drillContinent('Asia')">
+      <span class="stat-name" style="min-width: 110px;">Asia</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:24%;background:#6B6B6B"></div></div>
+      <span class="stat-num" style="">4</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div>
+    <div class="stat-row cont-row" data-cont="Oceania" style="cursor: pointer;" onclick="drillContinent('Oceania')">
+      <span class="stat-name" style="min-width: 110px;">Oceania</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:12%;background:#A8A8A8"></div></div>
+      <span class="stat-num" style="">2</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div>
+    <div class="stat-row cont-row" data-cont="Central America" style="cursor: pointer;" onclick="drillContinent('Central America')">
+      <span class="stat-name" style="min-width: 110px;">Central America</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:6%;background:#C8C8C8"></div></div>
+      <span class="stat-num" style="">1</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div>
+    <div class="stat-row cont-row" data-cont="South America" style="cursor: pointer;" onclick="drillContinent('South America')">
+      <span class="stat-name" style="min-width: 110px;">South America</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:0%;background:#b02323"></div></div>
+      <span class="stat-num" style="">0</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div></div>
+          <div id="countryDrill">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-red);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--ac-red);">Europe — 10 countries</div>
+    
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Italy</span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:100%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-charcoal)">3</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2015–2023</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Spain</span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:67%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-charcoal)">2</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2012–2013</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Germany</span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:67%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-charcoal)">2</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2022–2024</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">France</span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:33%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-charcoal)">1</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2023</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Greece</span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:33%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-charcoal)">1</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2013</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Portugal</span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:33%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-charcoal)">1</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2016</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Vatican <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ac-light);background:var(--ac-bg);padding:1px 5px;border-radius:2px;border:1px solid var(--ac-rule)">leg</span></span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:0%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-light)">—</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2015–2023</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Netherlands <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ac-light);background:var(--ac-bg);padding:1px 5px;border-radius:2px;border:1px solid var(--ac-rule)">leg</span></span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:0%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-light)">—</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2024</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Austria <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ac-light);background:var(--ac-bg);padding:1px 5px;border-radius:2px;border:1px solid var(--ac-rule)">leg</span></span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:0%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-light)">—</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2022</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">Belgium <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ac-light);background:var(--ac-bg);padding:1px 5px;border-radius:2px;border:1px solid var(--ac-rule)">leg</span></span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:0%;background:var(--ac-red)"></div></div>
+        <span class="stat-num" style="color:var(--ac-light)">—</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">2023–2025</span>
+      </div></div>
+        </div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Trips by continent</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+          <div id="tripContBars"></div>
+          <div id="tripContDrill">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-light);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--ac-rule);">Select a continent</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Kilometres flown per year — round-trip from YUL</div>
+        <div class="legend" id="legKm"></div>
+        <div style="position:relative;height:200px"><canvas id="kmChart"></canvas></div>
+      </div>
+      <div class="chart-card full" id="togetherChartCard">
+        <div class="chart-title">Marc &amp; Annie — shared vs. solo trips (2010–present)</div>
+        <div style="display:flex;gap:18px;margin-bottom:12px;">
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ac-mid);"><span style="width:12px;height:3px;border-radius:1px;background:#D82F2E;display:inline-block;"></span>Together</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ac-mid);"><span style="width:12px;height:3px;border-radius:1px;background:#1C1C1C;display:inline-block;"></span>Marc without Annie</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ac-mid);"><span style="width:12px;height:3px;border-radius:1px;background:#A8A8A8;display:inline-block;"></span>Annie without Marc</span>
+        </div>
+        <div style="position:relative;height:190px"><canvas id="togetherChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EDITOR ── -->
+  <div id="editorPanel" style="display: none;">
+    <div class="editor-intro">
+      <strong>How to keep this dashboard up to date:</strong> Use this tab to add new trips directly in the browser — no spreadsheet needed. All data is saved to <code>localStorage</code> in your browser, so it persists between sessions on this device. When you want to share or back up your data, click <strong>Export HTML</strong> to download a fresh standalone file with all your trips baked in.
+    </div>
+
+    <div class="add-form">
+      <div class="form-title">Add a new trip</div>
+      <div id="formMsg" class="msg success" style="display: none;">Trip to Vancouver, Canada (2022) added successfully.</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Country *</label>
+          <input type="text" id="fCountry" placeholder="e.g. Japan">
+        </div>
+        <div class="form-group">
+          <label>City *</label>
+          <input type="text" id="fCity" placeholder="e.g. Tokyo">
+        </div>
+        <div class="form-group">
+          <label>Continent *</label>
+          <select id="fContinent">
+            <option value="">Select…</option>
+            <option>Europe</option>
+            <option>North America</option>
+            <option>Asia</option>
+            <option>Carribean</option>
+            <option>Oceania</option>
+            <option>Central America</option>
+            <option>South America</option>
+            <option>Africa</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year *</label>
+          <input type="number" id="fYear" placeholder="2026" min="1980" max="2099">
+        </div>
+        <div class="form-group">
+          <label>Leg of a trip?</label>
+          <select id="fAdj"><option value="">No</option><option value="Yes">Yes</option></select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:1.25rem">
+        <label>Travelers *</label>
+        <div class="travelers-check" style="margin-top:4px">
+          <label><input type="checkbox" id="cbMarc" value="Marc"> Marc</label>
+          <label><input type="checkbox" id="cbAnnie" value="Annie"> Annie</label>
+          <label><input type="checkbox" id="cbErika" value="Erika"> Erika</label>
+          <label><input type="checkbox" id="cbVictoria" value="Victoria"> Victoria</label>
+          <label><input type="checkbox" id="cbRyan" value="Ryan"> Ryan</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" onclick="addTrip()">Add trip</button>
+        <button class="btn btn-export" onclick="exportHTML()">Export HTML</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <button class="btn btn-edit" onclick="clearFilters()" style="font-size:10px;padding:4px 12px">Clear filters</button>
+      <span class="trip-count" id="tripCount">12 of 145 trips</span>
+    </div>
+
+    <div class="trip-table-wrap">
+      <table class="trip-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Year</th><th>Country</th><th>City</th><th>Continent</th><th>Travelers</th><th>Leg</th><th>~km RT</th><th></th>
+          </tr>
+          <tr style="background:var(--ac-charcoal)">
+            <td></td>
+            <td><input class="col-filter" id="flt-year" placeholder="Year" oninput="renderTripTable()"></td>
+            <td><input class="col-filter" id="flt-country" placeholder="Country" oninput="renderTripTable()"></td>
+            <td><input class="col-filter" id="flt-city" placeholder="City" oninput="renderTripTable()"></td>
+            <td>
+              <select class="col-filter-sel" id="flt-continent" onchange="renderTripTable()">
+                <option value="">All</option>
+                <option>Europe</option>
+                <option>North America</option>
+                <option>Asia</option>
+                <option>Carribean</option>
+                <option>Oceania</option>
+                <option>Central America</option>
+                <option>South America</option>
+                <option>Africa</option>
+              </select>
+            </td>
+            <td>
+              <select class="col-filter-sel" id="flt-traveler" onchange="renderTripTable()">
+                <option value="">All</option>
+                <option>Marc</option>
+                <option>Annie</option>
+                <option>Erika</option>
+                <option>Victoria</option>
+                <option>Ryan</option>
+              </select>
+            </td>
+            <td>
+              <select class="col-filter-sel" id="flt-adj" onchange="renderTripTable()">
+                <option value="">All</option>
+                <option value="adj">Leg</option>
+                <option value="no">Not a leg</option>
+              </select>
+            </td>
+            <td></td>
+            <td></td>
+          </tr>
+        </thead>
+        <tbody id="tripTableBody"></tbody>
+      </table>
+    </div>
+    
+<script>
+// ─── Airport coordinate lookup (city → [lat, lon]) ─────────────────
+const AIRPORT_COORDS = {
+  'Shanghai, Beijing':[40.0799,116.5866],'Hong Kong':[22.308,113.9185],'Tokyo':[35.5533,139.7811],
+  'Osaka, Kyoto':[34.7855,135.438],'Doha':[25.2608,51.5655],'Singapore':[1.3644,103.9915],
+  'Seoul':[37.4602,126.4407],'Dubai':[25.2528,55.3644],'Atlantis':[25.0882,-77.3368],
+  'Nassau':[25.0382,-77.4661],'Bridgetown':[13.0745,-59.4925],'Bermuda':[32.364,-64.6788],
+  'Varadero':[23.0344,-81.4353],'Curacao':[12.1889,-68.9598],'Playa Dorada':[19.7578,-70.5001],
+  'Punta Cana':[18.5674,-68.3634],'Montego Bay':[18.5037,-77.9133],'Negril':[18.4,-78.35],
+  "Quepos, Manuel Antonio":[9.4432,-84.1316],'Salzburg':[47.7933,13.0043],'Vienna':[48.1103,16.5697],
+  'Brussels':[50.901,4.4844],'Rovinj, Hvar, Split':[43.5389,16.2981],'Prague':[50.1008,14.26],
+  'Copenhagen':[55.618,12.6508],"Paris, Cote d'Azur":[48.8566,2.3522],'Bordeaux':[44.8283,-0.7156],
+  'Paris':[48.8566,2.3522],'Cannes':[43.5528,7.0174],'Munich':[48.3537,11.775],'Munich, Berlin':[48.3537,11.775],
+  'Mannheim':[49.3736,8.4703],'Munich, Mannheim':[48.3537,11.775],'Frankfurt':[50.0379,8.5622],
+  'Stuttgart, Munich':[48.3537,11.775],'Quepos':[9.4432,-84.1316],'Athens/Zakynthos':[37.9364,23.9445],
+  'Santorini, Mykonos, Athens':[37.9364,23.9445],'Athens':[37.9364,23.9445],
+  'Rome, Florence, Venice':[41.8003,12.2389],'Venice, Rome':[41.8003,12.2389],
+  'Amalfi, Rome':[41.8003,12.2389],'Milan, Rome':[41.8003,12.2389],
+  'Rome, Montalcino, La Spezia, Milan':[41.8003,12.2389],'Taormina, Siracusa, Milan':[37.9167,15.65],
+  'Malta':[35.8575,14.4775],'Monaco':[43.7384,7.4246],'Amsterdam':[52.3086,4.7639],
+  'Alguave, Lison':[38.7742,-9.1342],'Bratislava':[48.1703,17.2127],'Barcelona':[41.2974,2.0833],
+  'Barcelona, Valencia, Madrid':[40.4983,-3.5676],'Mallorca':[39.5517,2.7388],'Ibiza':[38.8726,1.373],
+  'Barcelona, Tossa Del Mar':[41.2974,2.0833],'Mallorca, Barcelona':[39.5517,2.7388],
+  'Roses, Barcelona':[41.2974,2.0833],'Canary Islands, Lloret de Mar, Barcelona':[27.9319,-15.387],
+  'Zurich':[47.4647,8.5492],'Geneva':[46.238,6.1089],'Geneva, Lausanne, Gruyere':[46.238,6.1089],
+  'Lucerne, Bern, Lausanne':[46.238,6.1089],'London':[51.47,-0.4543],'Vatican':[41.8003,12.2389],
+  'Edmonton':[53.3097,-113.5827],'Louisdale':[45.75,-61.0],'Banff':[51.1784,-115.5708],
+  'Vancouver':[49.1967,-123.1815],'Mexico City':[19.4363,-99.0721],'Playa del Carmen':[20.6296,-87.0739],
+  'Cancun':[21.0365,-86.8771],'Disneyworld':[28.3852,-81.5639],'New York':[40.6413,-73.7781],
+  'Washington':[38.9531,-77.4565],'Daytona Beach':[29.1799,-81.0581],'Los Angeles':[33.9425,-118.4081],
+  'Seattle':[47.4502,-122.3088],'Minnessota':[44.8848,-93.2223],'New-York':[40.6413,-73.7781],
+  'Disneyland':[33.8121,-117.919],'Raleigh':[35.8776,-78.7875],'Chicago':[41.9742,-87.9073],
+  'Vegas':[36.084,-115.1537],'Houston':[29.9902,-95.3368],'San Francisco':[37.6213,-122.379],
+  'Miami':[25.7959,-80.287],'Wichita':[37.6499,-97.4331],'Boston':[42.3656,-71.0096],
+  'Disneyworld (Worlds)':[28.3852,-81.5639],'Las Vegas':[36.084,-115.1537],'NYC':[40.6413,-73.7781],
+  'Dallas':[32.8998,-97.0403],'Nashville':[36.1263,-86.6774],'Sidney':[-33.9461,151.1772],
+  'Brisbane, Fraser Island':[-27.3842,153.1175],'Sydney':[-33.9461,151.1772],
+  'Matamanoa':[-17.7333,177.1167],'Sao Paulo':[-23.4356,-46.4731],
+};
+
+// ─── Seed data ────────────────────────────────────────────────────
+const SEED = [
+  {
+    "Country": "USA",
+    "City": "Disneyworld",
+    "Continent": "North America",
+    "Year": 1988,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "New York",
+    "Continent": "North America",
+    "Year": 1990,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyworld",
+    "Continent": "North America",
+    "Year": 1991,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyworld",
+    "Continent": "North America",
+    "Year": 1991,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "New York",
+    "Continent": "North America",
+    "Year": 1995,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Washington",
+    "Continent": "North America",
+    "Year": 1996,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Washington",
+    "Continent": "North America",
+    "Year": 1997,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Mexico",
+    "City": "Mexico City",
+    "Continent": "North America",
+    "Year": 1999,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Daytona Beach",
+    "Continent": "North America",
+    "Year": 1999,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Dominicain Republic",
+    "City": "Playa Dorada",
+    "Continent": "Carribean",
+    "Year": 2000,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Washington",
+    "Continent": "North America",
+    "Year": 2000,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "France",
+    "City": "Paris, Cote d'Azur",
+    "Continent": "Europe",
+    "Year": 2002,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Vatican",
+    "City": "Vatican",
+    "Continent": "Europe",
+    "Year": 2002,
+    "Adj": "Yes",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Italy",
+    "City": "Rome, Florence, Venice",
+    "Continent": "Europe",
+    "Year": 2002,
+    "Adj": "Yes",
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Monaco",
+    "City": "Monaco",
+    "Continent": "Europe",
+    "Year": 2002,
+    "Adj": "Yes",
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Fiji",
+    "City": "Matamanoa",
+    "Continent": "Oceania",
+    "Year": 2003,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "France",
+    "City": "Bordeaux",
+    "Continent": "Europe",
+    "Year": 2003,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Los Angeles",
+    "Continent": "North America",
+    "Year": 2003,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Seattle",
+    "Continent": "North America",
+    "Year": 2003,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Cuba",
+    "City": "Varadero",
+    "Continent": "Carribean",
+    "Year": 2005,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Minnessota",
+    "Continent": "North America",
+    "Year": 2005,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Washington",
+    "Continent": "North America",
+    "Year": 2005,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "France",
+    "City": "Paris",
+    "Continent": "Europe",
+    "Year": 2006,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "New York",
+    "Continent": "North America",
+    "Year": 2006,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Raleigh",
+    "Continent": "North America",
+    "Year": 2007,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyland",
+    "Continent": "North America",
+    "Year": 2007,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Canada",
+    "City": "Edmonton",
+    "Continent": "North America",
+    "Year": 2007,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Chicago",
+    "Continent": "North America",
+    "Year": 2008,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Las Vegas",
+    "Continent": "North America",
+    "Year": 2009,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1
+  },
+  {
+    "Country": "France",
+    "City": "Paris",
+    "Continent": "Europe",
+    "Year": 2010,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyworld",
+    "Continent": "North America",
+    "Year": 2010,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1
+  },
+  {
+    "Country": "USA",
+    "City": "Houston",
+    "Continent": "North America",
+    "Year": 2010,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "San Francisco",
+    "Continent": "North America",
+    "Year": 2010,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Mexico",
+    "City": "Playa Del Carmen",
+    "Continent": "North America",
+    "Year": 2010,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1
+  },
+  {
+    "Country": "UK",
+    "City": "London",
+    "Continent": "Europe",
+    "Year": 2010,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "France",
+    "City": "Paris",
+    "Continent": "Europe",
+    "Year": 2011,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "UK",
+    "City": "London",
+    "Continent": "Europe",
+    "Year": 2011,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Miami",
+    "Continent": "North America",
+    "Year": 2011,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Australia",
+    "City": "Sydney",
+    "Continent": "Oceania",
+    "Year": 2011,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Bahamas",
+    "City": "Atlantis",
+    "Continent": "Carribean",
+    "Year": 2011,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1
+  },
+  {
+    "Country": "UK",
+    "City": "London",
+    "Continent": "Europe",
+    "Year": 2011,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "UK",
+    "City": "London",
+    "Continent": "Europe",
+    "Year": 2011,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "Wichita",
+    "Continent": "North America",
+    "Year": 2012,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Las Vegas",
+    "Continent": "North America",
+    "Year": 2012,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Spain",
+    "City": "Barcelona",
+    "Continent": "Europe",
+    "Year": 2012,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Switzerland",
+    "City": "Zurich",
+    "Continent": "Europe",
+    "Year": 2012,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyworld",
+    "Continent": "North America",
+    "Year": 2012,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Miami",
+    "Continent": "North America",
+    "Year": 2012,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "UK",
+    "City": "London",
+    "Continent": "Europe",
+    "Year": 2012,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "UK",
+    "City": "LONDON",
+    "Continent": "Europe",
+    "Year": 2012,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "Boston",
+    "Continent": "North America",
+    "Year": 2013,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Spain",
+    "City": "Barcelona, Valencia, Madrid",
+    "Continent": "Europe",
+    "Year": 2013,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Greece",
+    "City": "Athens/Zakynthos",
+    "Continent": "Europe",
+    "Year": 2013,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Bermuda",
+    "City": "Bermuda",
+    "Continent": "Carribean",
+    "Year": 2013,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyworld (Worlds)",
+    "Continent": "North America",
+    "Year": 2013,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Wichita",
+    "Continent": "North America",
+    "Year": 2013,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "Miami",
+    "Continent": "North America",
+    "Year": 2013,
+    "Adj": "",
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Japan",
+    "City": "Tokyo",
+    "Continent": "Asia",
+    "Year": 2014,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Greece",
+    "City": "Santorini, Mykonos, Athens",
+    "Continent": "Europe",
+    "Year": 2014,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Switzerland",
+    "City": "Geneva",
+    "Continent": "Europe",
+    "Year": 2014,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Costa Rica",
+    "City": "Quepos, Manuel Antonio",
+    "Continent": "Central America",
+    "Year": 2014,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1
+  },
+  {
+    "Country": "UK",
+    "City": "London",
+    "Continent": "Europe",
+    "Year": 2014,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Canada",
+    "City": "Louisdale",
+    "Continent": "North America",
+    "Year": 2015,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Las Vegas",
+    "Continent": "North America",
+    "Year": 2015,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Italy",
+    "City": "Venice, Rome",
+    "Continent": "Europe",
+    "Year": 2015,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Japan",
+    "City": "Tokyo",
+    "Continent": "Asia",
+    "Year": 2015,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "UAE",
+    "City": "Dubai",
+    "Continent": "Asia",
+    "Year": 2015,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Australia",
+    "City": "Sydney",
+    "Continent": "Oceania",
+    "Year": 2015,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Hong Kong",
+    "City": "hong Kong",
+    "Continent": "Asia",
+    "Year": 2015,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Vatican",
+    "City": "Vatican",
+    "Continent": "Europe",
+    "Year": 2015,
+    "Adj": "Yes",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1
+  },
+  {
+    "Country": "USA",
+    "City": "Los Angeles",
+    "Continent": "North America",
+    "Year": 2015,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1
+  },
+  {
+    "Country": "Spain",
+    "City": "Mallorca",
+    "Continent": "Europe",
+    "Year": 2016,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "South Korea",
+    "City": "Seoul",
+    "Continent": "Asia",
+    "Year": 2016,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Portugal",
+    "City": "Alguave, Lison",
+    "Continent": "Europe",
+    "Year": 2016,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Jamaica",
+    "City": "Montego Bay",
+    "Continent": "Carribean",
+    "Year": 2016,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Netherlands",
+    "City": "Amsterdam",
+    "Continent": "Europe",
+    "Year": 2016,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "Las Vegas",
+    "Continent": "North America",
+    "Year": 2016,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "Las Vegas",
+    "Continent": "North America",
+    "Year": 2016,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Mexico",
+    "City": "Playa Del Carmen",
+    "Continent": "North America",
+    "Year": 2016,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "New York",
+    "Continent": "North America",
+    "Year": 2017,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Germany",
+    "City": "Munich, Berlin",
+    "Continent": "Europe",
+    "Year": 2017,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Switzerland",
+    "City": "Geneva",
+    "Continent": "Europe",
+    "Year": 2017,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Czechia",
+    "City": "Prague",
+    "Continent": "Europe",
+    "Year": 2017,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyworld (Worlds)",
+    "Continent": "North America",
+    "Year": 2017,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Las Vegas",
+    "Continent": "North America",
+    "Year": 2017,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Brazil",
+    "City": "Sao Pauloq",
+    "Continent": "South America",
+    "Year": 2017,
+    "Adj": "",
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Brazil",
+    "City": "Sao Paulo",
+    "Continent": "South America",
+    "Year": 2017,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Dallas",
+    "Continent": "North America",
+    "Year": 2018,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Hong Kong",
+    "City": "Hong Kong",
+    "Continent": "Asia",
+    "Year": 2018,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Australia",
+    "City": "Brisbane, Fraser Island",
+    "Continent": "Oceania",
+    "Year": 2018,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyworld (Worlds)",
+    "Continent": "North America",
+    "Year": 2018,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Miami",
+    "Continent": "North America",
+    "Year": 2018,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 1,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "San Francisco",
+    "Continent": "North America",
+    "Year": 2019,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Spain",
+    "City": "Ibiza",
+    "Continent": "Europe",
+    "Year": 2019,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Greece",
+    "City": "Athens",
+    "Continent": "Europe",
+    "Year": 2019,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Disneyworld (Worlds)",
+    "Continent": "North America",
+    "Year": 2019,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "China",
+    "City": "Shanghai, Beijing",
+    "Continent": "Asia",
+    "Year": 2019,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Bahamas",
+    "City": "Nassau",
+    "Continent": "Carribean",
+    "Year": 2019,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Germany",
+    "City": "Mannheim",
+    "Continent": "Europe",
+    "Year": 2019,
+    "Marc": 0,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Netherlands",
+    "City": "Amsterdam",
+    "Continent": "Europe",
+    "Year": 2019,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 1,
+    "Ryan": 0
+  },
+  {
+    "Country": "USA",
+    "City": "Las Vegas",
+    "Continent": "North America",
+    "Year": 2019,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Canada",
+    "City": "Banff",
+    "Continent": "North America",
+    "Year": 2020,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "France",
+    "City": "Paris",
+    "Continent": "Europe",
+    "Year": 2021,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Italy",
+    "City": "Amalfi, Rome",
+    "Continent": "Europe",
+    "Year": 2021,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Canada",
+    "City": "Vancouver",
+    "Continent": "North America",
+    "Year": 2022,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Croatia",
+    "City": "Rovinj, Hvar, Split",
+    "Continent": "Europe",
+    "Year": 2022,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Austria",
+    "City": "Salzburg",
+    "Continent": "Europe",
+    "Year": 2022,
+    "Marc": 0,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 1,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Australia",
+    "City": "Sydney",
+    "Continent": "Oceania",
+    "Year": 2022,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Qatar",
+    "City": "Doha",
+    "Continent": "Asia",
+    "Year": 2022,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "UAE",
+    "City": "Dubai",
+    "Continent": "Asia",
+    "Year": 2022,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Dominicain Republic",
+    "City": "Punta Cana",
+    "Continent": "Carribean",
+    "Year": 2022,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Germany",
+    "City": "Munich, Mannheim",
+    "Continent": "Europe",
+    "Year": 2022,
+    "Marc": 0,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Canada",
+    "City": "Vancouver",
+    "Continent": "North America",
+    "Year": 2022,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1
+  },
+  {
+    "Country": "France",
+    "City": "Paris",
+    "Continent": "Europe",
+    "Year": 2023,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Spain",
+    "City": "Mallorca, Barcelona",
+    "Continent": "Europe",
+    "Year": 2023,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Spain",
+    "City": "Barcelona, Tossa Del Mar",
+    "Continent": "Europe",
+    "Year": 2023,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Belgium",
+    "City": "Brussels",
+    "Continent": "Europe",
+    "Year": 2023,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Spain",
+    "City": "Barcelona",
+    "Continent": "Europe",
+    "Year": 2023,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Italy",
+    "City": "Milan, Rome",
+    "Continent": "Europe",
+    "Year": 2023,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1
+  },
+  {
+    "Country": "Vatican",
+    "City": "Vatican",
+    "Continent": "Europe",
+    "Year": 2023,
+    "Adj": "Yes",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1
+  },
+  {
+    "Country": "Canada",
+    "City": "Vancouver",
+    "Continent": "North America",
+    "Year": 2023,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "Canada",
+    "City": "Vancouver",
+    "Continent": "North America",
+    "Year": 2023,
+    "Adj": "",
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  },
+  {
+    "Country": "France",
+    "City": "Cannes",
+    "Continent": "Europe",
+    "Year": 2024,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Spain",
+    "City": "Roses, Barcelona",
+    "Continent": "Europe",
+    "Year": 2024,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Spain",
+    "City": "Canary Islands, Lloret de Mar, Barcelona",
+    "Continent": "Europe",
+    "Year": 2024,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Singapore",
+    "City": "Singapore",
+    "Continent": "Asia",
+    "Year": 2024,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Italy",
+    "City": "Rome, Montalcino, La Spezia, Milan",
+    "Continent": "Europe",
+    "Year": 2024,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Netherlands",
+    "City": "Amsterdam",
+    "Continent": "Europe",
+    "Year": 2024,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Switzerland",
+    "City": "Geneva, Lausanne, Gruyere",
+    "Continent": "Europe",
+    "Year": 2024,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Japan",
+    "City": "Tokyo",
+    "Continent": "Asia",
+    "Year": 2024,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1
+  },
+  {
+    "Country": "Germany",
+    "City": "Frankfurt",
+    "Continent": "Europe",
+    "Year": 2024,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "Nashville",
+    "Continent": "North America",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Malta",
+    "City": "Malta",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Italy",
+    "City": "Taormina, Siracusa, Milan",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Germany",
+    "City": "Munich, Stuttgart",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Jamaica",
+    "City": "Negril",
+    "Continent": "Carribean",
+    "Year": 2025,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Curacao",
+    "City": "Curacao",
+    "Continent": "Carribean",
+    "Year": 2025,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Japan",
+    "City": "Osaka, Kyoto",
+    "Continent": "Asia",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "France",
+    "City": "Paris",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 0,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "San Francisco",
+    "Continent": "North America",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Switzerland",
+    "City": "Lucerne, Bern, Lausanne",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Belgium",
+    "City": "Brussels",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Netherlands",
+    "City": "Amsterdam",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 0,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Austria",
+    "City": "Vienna",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Slovakia",
+    "City": "Bratislava",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Mexico",
+    "City": "Cancun",
+    "Continent": "North America",
+    "Year": 2025,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Belgium",
+    "City": "Brussels",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 0,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Netherlands",
+    "City": "Amsterdam",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Marc": 0,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "UK",
+    "City": "London",
+    "Continent": "Europe",
+    "Year": 2025,
+    "Adj": "",
+    "Marc": 0,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1
+  },
+  {
+    "Country": "Barbados",
+    "City": "Bridgetown",
+    "Continent": "Carribean",
+    "Year": 2026,
+    "Marc": 1,
+    "Annie": 0,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "Denmark",
+    "City": "Copenhagen",
+    "Continent": "Europe",
+    "Year": 2026,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": ""
+  },
+  {
+    "Country": "Sweden",
+    "City": "Malmo",
+    "Continent": "Europe",
+    "Year": 2026,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 1,
+    "Victoria": 1,
+    "Ryan": 0,
+    "Adj": "Yes"
+  },
+  {
+    "Country": "Bahamas",
+    "City": "Nassau",
+    "Continent": "Carribean",
+    "Year": 2026,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 1,
+    "Adj": ""
+  },
+  {
+    "Country": "USA",
+    "City": "New York",
+    "Continent": "North America",
+    "Year": 2026,
+    "Adj": "",
+    "lat": null,
+    "lon": null,
+    "Marc": 1,
+    "Annie": 1,
+    "Erika": 0,
+    "Victoria": 0,
+    "Ryan": 0
+  }
+];
+
+// ─── Constants ───────────────────────────────────────────────────
+const YUL=[45.4706,-73.7408], YYZ=[43.6777,-79.6248], YVR=[49.1967,-123.1815];
+const TRAVELERS=['Marc','Annie','Erika','Victoria','Ryan'];
+const COLORS={Marc:'#D82F2E',Annie:'#1C1C1C',Erika:'#6B6B6B',Victoria:'#A8A8A8',Ryan:'#3D3D3D'};
+const COUPLE_COLOR='#D82F2E';
+const CONT_COLORS=['#D82F2E','#1C1C1C','#3D3D3D','#6B6B6B','#A8A8A8','#C8C8C8','#b02323'];
+
+// ─── Storage ─────────────────────────────────────────────────────
+function loadTrips() {
+  try {
+    const s = localStorage.getItem('tj_trips');
+    return s ? JSON.parse(s) : JSON.parse(JSON.stringify(SEED));
+  } catch(e) { return JSON.parse(JSON.stringify(SEED)); }
+}
+function saveTrips(trips) {
+  localStorage.setItem('tj_trips', JSON.stringify(trips));
+}
+
+let TRIPS = loadTrips();
+if (!TRIPS.length) { TRIPS = JSON.parse(JSON.stringify(SEED)); saveTrips(TRIPS); }
+
+// ─── Geo ─────────────────────────────────────────────────────────
+function hav(p1, p2) {
+  const R=6371, toR=x=>x*Math.PI/180;
+  const dlat=toR(p2[0]-p1[0]), dlon=toR(p2[1]-p1[1]);
+  const a=Math.sin(dlat/2)**2+Math.cos(toR(p1[0]))*Math.cos(toR(p2[0]))*Math.sin(dlon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function tripDist(trip) {
+  let coords = AIRPORT_COORDS[trip.City] || null;
+  if (!coords) {
+    const firstCity = trip.City.split(',')[0].trim();
+    coords = AIRPORT_COORDS[firstCity] || null;
+  }
+  if (!coords) return 0;
+  const cont = trip.Continent;
+  if (cont === 'Europe') {
+    return 0.75*hav(YUL,coords) + 0.25*(hav(YUL,YYZ)+hav(YYZ,coords));
+  } else if (cont === 'Asia') {
+    return 0.20*hav(YUL,coords) + 0.80*(hav(YUL,YVR)+hav(YVR,coords));
+  }
+  return hav(YUL,coords);
+}
+
+// ─── Derived stats ───────────────────────────────────────────────
+function computeStats(trips) {
+  const nonAdj = trips.filter(t => !t.Adj);
+  const allRows = trips;
+  const stats = { trips:{}, countries:{}, km:{}, yearly:{}, yearlyKm:{},
+                  continentCountrySets:{},   // {cont: {traveler: Set<country>}}
+                  continentCountryUnion:{},  // {cont: Set<country>} — all travelers union, incl legs
+                  topCountries:{},
+                  coupleTrips:0, coupleKm:0, coupleCountries:new Set(), coupleYearly:{}, coupleYearlyKm:{},
+                  coupleContinent:{}, coupleTopCountries:{} };
+  TRAVELERS.forEach(t => { stats.trips[t]=0; stats.countries[t]=new Set(); stats.km[t]=0; });
+
+  // Pass 1: all rows including legs — countries and continent country sets
+  allRows.forEach(row => {
+    const cont = row.Continent;
+    if (!stats.continentCountrySets[cont]) {
+      stats.continentCountrySets[cont] = {};
+      stats.continentCountryUnion[cont] = new Set();
+      TRAVELERS.forEach(t => { stats.continentCountrySets[cont][t] = new Set(); });
+    }
+    TRAVELERS.forEach(t => {
+      if ((row[t]||0) > 0) {
+        stats.countries[t].add(row.Country);
+        stats.continentCountrySets[cont][t].add(row.Country);
+        stats.continentCountryUnion[cont].add(row.Country);
+      }
+    });
+    // Couple countries
+    const coupleN = Math.min(row.Marc||0, row.Annie||0);
+    if (coupleN > 0) {
+      stats.coupleCountries.add(row.Country);
+      if (!stats.coupleContinent[cont]) stats.coupleContinent[cont] = new Set();
+      stats.coupleContinent[cont].add(row.Country);
+    }
+  });
+
+  // Pass 2: trips, km, yearly, topCountries — non-leg only
+  nonAdj.forEach(row => {
+    const d = tripDist(row) * 2;
+    TRAVELERS.forEach(t => {
+      const n = row[t]||0;
+      if (n > 0) {
+        stats.trips[t] += n;
+        stats.km[t] += n * d;
+        const yr = row.Year;
+        if (!stats.yearly[yr]) stats.yearly[yr] = {};
+        if (!stats.yearlyKm[yr]) stats.yearlyKm[yr] = {};
+        stats.yearly[yr][t] = (stats.yearly[yr][t]||0) + n;
+        stats.yearlyKm[yr][t] = (stats.yearlyKm[yr][t]||0) + n*d;
+      }
+    });
+    const coupleN = Math.min(row.Marc||0, row.Annie||0);
+    if (coupleN > 0) {
+      stats.coupleTrips += coupleN;
+      stats.coupleKm += coupleN * d;
+      const yr = row.Year;
+      stats.coupleYearly[yr] = (stats.coupleYearly[yr]||0) + coupleN;
+      stats.coupleYearlyKm[yr] = (stats.coupleYearlyKm[yr]||0) + coupleN * d;
+      stats.coupleTopCountries[row.Country] = (stats.coupleTopCountries[row.Country]||0) + coupleN;
+    }
+    if (!stats.topCountries[row.Country]) stats.topCountries[row.Country] = {};
+    TRAVELERS.forEach(t => { stats.topCountries[row.Country][t] = (stats.topCountries[row.Country][t]||0) + (row[t]||0); });
+  });
+
+  // Finalise Sets → counts
+  TRAVELERS.forEach(t => { stats.countries[t] = stats.countries[t].size; });
+  stats.coupleCountries = stats.coupleCountries.size;
+  Object.keys(stats.coupleContinent).forEach(cont => {
+    stats.coupleContinent[cont] = stats.coupleContinent[cont].size;
+  });
+  return stats;
+}
+
+let STATS = computeStats(TRIPS);
+let currentFilter = 'all';
+let chartInsts = {};
+
+function getTravelers() {
+  if (currentFilter==='all') return TRAVELERS;
+  if (currentFilter==='couple') return ['Marc','Annie'];
+  return [currentFilter];
+}
+function sumFor(obj) { return getTravelers().reduce((s,t)=>s+(obj[t]||0),0); }
+
+// ─── Filter ──────────────────────────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    const lbl = b.textContent.trim().replace(/\s+/g,' ');
+    const isCouple = b.classList.contains('couple');
+    b.classList.toggle('active',
+      (f==='all'&&lbl==='All travelers') || (f==='couple'&&isCouple) || (!isCouple&&lbl===f));
+  });
+  renderDashboard();
+}
+
+// ─── Dashboard render ────────────────────────────────────────────
+function renderDashboard() {
+  const ts = getTravelers();
+  const isCouple = currentFilter==='couple';
+  const trips = isCouple ? STATS.coupleTrips : ts.reduce((s,t)=>s+STATS.trips[t],0);
+  const countries = currentFilter==='all'
+    ? new Set(TRIPS.map(r=>r.Country)).size
+    : isCouple ? STATS.coupleCountries
+    : STATS.countries[currentFilter];
+  const totalKm = isCouple ? STATS.coupleKm : ts.reduce((s,t)=>s+STATS.km[t],0);
+  const earthLaps = (totalKm/40075).toFixed(1);
+
+  document.getElementById('metricGrid1').innerHTML = [
+    {label:'Total trips', value:trips.toLocaleString(), sub: isCouple?'common trips only':currentFilter==='all'?'all travelers':currentFilter},
+    {label:'Countries visited', value:countries, sub:'unique countries', hi:true},
+  ].map(c=>`<div class="metric-card${c.hi?' hi':''}"><div class="metric-label">${c.label}</div><div class="metric-value">${c.value}</div><div class="metric-sub">${c.sub}</div></div>`).join('');
+
+  document.getElementById('metricGrid2').innerHTML = [
+    {label:'Total km flown (RT)', value:Math.round(totalKm).toLocaleString()+' km', sub:'round-trip from YUL'},
+    {label:'Earth laps equivalent', value:earthLaps+'×', sub:'× Earth circumference (40,075 km)'},
+  ].map(c=>`<div class="metric-card${c.hi?' hi':''}"><div class="metric-label">${c.label}</div><div class="metric-value">${c.value}</div><div class="metric-sub">${c.sub}</div></div>`).join('');
+
+  const currentYear = new Date().getFullYear();
+  const years = Object.keys(STATS.yearly).map(Number).sort((a,b)=>a-b);
+
+  // Year chart
+  document.getElementById('legYear').innerHTML = (isCouple?[['Marc & Annie',COUPLE_COLOR]]:ts.map(t=>[t,COLORS[t]]))
+    .map(([n,c])=>`<span class="leg-item"><span class="leg-dot" style="background:${c}"></span>${n}</span>`).join('');
+  mkChart('yearChart','line',{
+    labels:years,
+    datasets: isCouple ? [{label:'Marc & Annie',data:years.map(y=>STATS.coupleYearly[y]||0),borderColor:COUPLE_COLOR,backgroundColor:COUPLE_COLOR+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}]
+      : ts.map(t=>({label:t,data:years.map(y=>STATS.yearly[y]?.[t]||0),borderColor:COLORS[t],backgroundColor:COLORS[t]+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}))
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{color:'rgba(128,128,128,0.08)'}},y:{ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.08)'}}}});
+
+  // KM chart
+  document.getElementById('legKm').innerHTML = (isCouple?[['Marc & Annie',COUPLE_COLOR]]:ts.map(t=>[t,COLORS[t]]))
+    .map(([n,c])=>`<span class="leg-item"><span class="leg-dot" style="background:${c}"></span>${n}</span>`).join('');
+  mkChart('kmChart','bar',{
+    labels:years,
+    datasets: isCouple ? [{label:'Marc & Annie',data:years.map(y=>STATS.coupleYearlyKm[y]||0),backgroundColor:COUPLE_COLOR+'bb',borderWidth:0}]
+      : ts.map(t=>({label:t,data:years.map(y=>STATS.yearlyKm[y]?.[t]||0),backgroundColor:COLORS[t]+'bb',borderWidth:0}))
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${Math.round(c.raw).toLocaleString()} km`}}},scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{display:false}},y:{ticks:{font:{size:10},callback:v=>v>=1000?Math.round(v/1000)+'K':v},grid:{color:'rgba(128,128,128,0.08)'}}}});
+
+  // Continent bars — unique countries visited (union across selected travelers, incl legs)
+  const contUnionCount = (cont) => {
+    if (isCouple) return STATS.coupleContinent[cont] || 0;
+    if (currentFilter !== 'all') {
+      return STATS.continentCountrySets[cont]?.[currentFilter]?.size || 0;
+    }
+    // All travelers: union of all traveler Sets for this continent
+    const union = new Set();
+    TRAVELERS.forEach(t => {
+      (STATS.continentCountrySets[cont]?.[t] || new Set()).forEach(c => union.add(c));
+    });
+    return union.size;
+  };
+
+  const allConts = Object.keys(STATS.continentCountrySets||{});
+  const contSorted = allConts.map(c=>({c, v:contUnionCount(c)})).sort((a,b)=>b.v-a.v);
+  const contMax = contSorted[0]?.v||1;
+  document.getElementById('contBars').innerHTML = contSorted.map((r,i)=>`
+    <div class="stat-row cont-row" data-cont="${r.c}" style="cursor:pointer;" onclick="drillContinent('${r.c}')">
+      <span class="stat-name" style="min-width:110px">${r.c}</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:${Math.round(r.v/contMax*100)}%;background:${CONT_COLORS[i%CONT_COLORS.length]}"></div></div>
+      <span class="stat-num">${r.v}</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div>`).join('');
+
+  // Pre-select first continent
+  if (contSorted.length) drillContinent(contSorted[0].c);
+
+  // Trips by continent bars (non-leg only)
+  const tripContData = (cont) => {
+    if (isCouple) {
+      return TRIPS.filter(r=>!r.Adj&&r.Continent===cont)
+        .reduce((s,r)=>s+Math.min(r.Marc||0,r.Annie||0),0);
+    }
+    return TRIPS.filter(r=>!r.Adj&&r.Continent===cont)
+      .reduce((s,r)=>s+ts.reduce((ss,t)=>ss+(r[t]||0),0),0);
+  };
+  const tripContSorted = [...new Set(TRIPS.map(r=>r.Continent))]
+    .map(c=>({c,v:tripContData(c)})).sort((a,b)=>b.v-a.v);
+  const tripContMax = tripContSorted[0]?.v||1;
+  document.getElementById('tripContBars').innerHTML = tripContSorted.map((r,i)=>`
+    <div class="stat-row trip-cont-row" data-cont="${r.c}" style="cursor:pointer;" onclick="drillTripContinent('${r.c}')">
+      <span class="stat-name" style="min-width:110px">${r.c}</span>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:${Math.round(r.v/tripContMax*100)}%;background:${CONT_COLORS[i%CONT_COLORS.length]}"></div></div>
+      <span class="stat-num">${r.v}</span>
+      <span style="font-size:10px;color:var(--ac-light);margin-left:8px;">›</span>
+    </div>`).join('');
+  if (tripContSorted.length) drillTripContinent(tripContSorted[0].c);
+
+  // Year dropdown — all years including current and future, most recent first
+  const allYears = Object.keys(STATS.yearly).map(Number).sort((a,b)=>b-a);
+  const yearTripCount = y => {
+    // Include leg trips in the year bar count
+    const allRowsYear = TRIPS.filter(r => r.Year === y);
+    if (isCouple) return allRowsYear.reduce((s,r)=>s+Math.min(r.Marc||0,r.Annie||0),0);
+    return allRowsYear.reduce((s,r)=>s+ts.reduce((ss,t)=>ss+(r[t]||0),0),0);
+  };
+  const sel = document.getElementById('yearSelect');
+  sel.innerHTML = allYears.map(y => {
+    const v = yearTripCount(y);
+    return `<option value="${y}">${y} — ${v} destination${v!==1?'s':''}</option>`;
+  }).join('');
+  // Pre-select most recent year
+  if (allYears.length) { sel.value = allYears[0]; drillYear(allYears[0]); }
+
+  // Traveler summary table — all travelers view only
+  const showSummary = currentFilter === 'all';
+  const showTogether = currentFilter === 'all' || currentFilter === 'couple' || currentFilter === 'Marc' || currentFilter === 'Annie';
+  document.getElementById('travelerSummaryCard').style.display = showSummary ? 'block' : 'none';
+  document.getElementById('togetherChartCard').style.display   = showTogether ? 'block' : 'none';
+
+  if (showSummary) {
+    const COLORS_MAP = {Marc:'#D82F2E', Annie:'#1C1C1C', Erika:'#6B6B6B', Victoria:'#A8A8A8', Ryan:'#3D3D3D'};
+    document.getElementById('travelerSummaryTable').innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:var(--ac-black);">
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--ac-white);text-transform:uppercase;letter-spacing:0.08em;border-bottom:3px solid var(--ac-red);">Traveler</th>
+            <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:700;color:var(--ac-white);text-transform:uppercase;letter-spacing:0.08em;border-bottom:3px solid var(--ac-red);">Trips</th>
+            <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:700;color:var(--ac-white);text-transform:uppercase;letter-spacing:0.08em;border-bottom:3px solid var(--ac-red);">Countries</th>
+            <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:700;color:var(--ac-white);text-transform:uppercase;letter-spacing:0.08em;border-bottom:3px solid var(--ac-red);">Km Flown (RT)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${TRAVELERS.map((t,i) => {
+            const tTrips     = STATS.trips[t] || 0;
+            const tCountries = STATS.countries[t] || 0;
+            const tKm        = Math.round(STATS.km[t] || 0).toLocaleString();
+            return `<tr style="${i%2===0?'background:var(--ac-white)':'background:var(--ac-bg)'}">
+              <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);font-weight:500;">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${COLORS_MAP[t]};margin-right:8px;vertical-align:middle;"></span>${t}
+              </td>
+              <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);text-align:right;font-family:monospace;font-size:12px;">${tTrips}</td>
+              <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);text-align:right;font-family:monospace;font-size:12px;">${tCountries}</td>
+              <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);text-align:right;font-family:monospace;font-size:12px;">${tKm} km</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // Together chart — show for all, Marc, Annie and couple views
+  if (showTogether) {
+    const recentYears = years.filter(y=>y>=2010);
+    mkChart('togetherChart','bar',{
+      labels:recentYears,
+      datasets:[
+        {label:'Together',data:recentYears.map(y=>{const ma=STATS.yearly[y]?.Marc||0,an=STATS.yearly[y]?.Annie||0;return(ma>0&&an>0)?Math.min(ma,an):0;}),backgroundColor:'#D82F2E',borderWidth:0},
+        {label:'Marc without Annie',data:recentYears.map(y=>{const ma=STATS.yearly[y]?.Marc||0,an=STATS.yearly[y]?.Annie||0;return Math.max(0,ma-(an>0?Math.min(ma,an):0));}),backgroundColor:'#1C1C1C',borderWidth:0},
+        {label:'Annie without Marc',data:recentYears.map(y=>{const ma=STATS.yearly[y]?.Marc||0,an=STATS.yearly[y]?.Annie||0;return Math.max(0,an-(ma>0?Math.min(ma,an):0));}),backgroundColor:'#A8A8A8',borderWidth:0},
+      ]
+    },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{font:{size:9},maxRotation:45},grid:{display:false}},y:{stacked:true,ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.08)'}}}});
+  }
+
+  // Header meta
+  const totalTrips = TRAVELERS.reduce((s,t)=>s+STATS.trips[t],0);
+  const totalCountries = new Set(TRIPS.map(r=>r.Country)).size;
+  document.getElementById('headerMeta').textContent = `${TRIPS.filter(r=>!r.Adj).length} trips · ${totalCountries} countries · ${Math.round(TRAVELERS.reduce((s,t)=>s+STATS.km[t],0)).toLocaleString()} km flown`;
+}
+
+function mkChart(id, type, data, options) {
+  if (chartInsts[id]) chartInsts[id].destroy();
+  chartInsts[id] = new Chart(document.getElementById(id), {type, data, options});
+}
+
+function drillContinent(cont) {
+  const isCouple = currentFilter==='couple';
+  const ts = getTravelers();
+
+  // Highlight selected row
+  document.querySelectorAll('.cont-row').forEach(r => {
+    const active = r.dataset.cont === cont;
+    r.style.background = active ? 'var(--ac-red-light)' : '';
+    r.querySelector('.stat-name').style.color = active ? 'var(--ac-red)' : '';
+    r.querySelector('.stat-num').style.color = active ? 'var(--ac-red)' : '';
+  });
+
+  // Build country map: all rows in this continent
+  const allRows = TRIPS.filter(r => r.Continent === cont);
+  const countryMap = {};
+  allRows.forEach(row => {
+    if (!countryMap[row.Country]) countryMap[row.Country] = {trips:0, years:new Set(), adjOnly:true};
+    const n = isCouple ? Math.min(row.Marc||0, row.Annie||0) : ts.reduce((s,t)=>s+(row[t]||0),0);
+    if (n > 0) {
+      countryMap[row.Country].years.add(row.Year);
+      if (!row.Adj) {
+        countryMap[row.Country].trips += n;
+        countryMap[row.Country].adjOnly = false;
+      }
+    }
+  });
+
+  const sorted = Object.entries(countryMap)
+    .filter(([,v]) => v.years.size > 0)
+    .sort(([,a],[,b]) => {
+      if (a.adjOnly !== b.adjOnly) return a.adjOnly ? 1 : -1;
+      return b.trips - a.trips;
+    });
+
+  const drill = document.getElementById('countryDrill');
+  if (!sorted.length) {
+    drill.innerHTML = `<div style="font-size:12px;color:var(--ac-light);padding:12px 0">${cont} — no countries visited</div>`;
+    return;
+  }
+
+  const totalUnique = sorted.length;
+  const maxTrips = sorted.filter(([,v])=>!v.adjOnly)[0]?.[1].trips || 1;
+
+  drill.innerHTML = `
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-red);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--ac-red);">${cont} — ${totalUnique} countr${totalUnique>1?'ies':'y'}</div>
+    ${sorted.map(([country,v])=>`
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">${country}${v.adjOnly?` <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--ac-light);background:var(--ac-bg);padding:1px 5px;border-radius:2px;border:1px solid var(--ac-rule)">leg</span>`:''}</span>
+        <div class="stat-bar-wrap">${v.adjOnly?'':
+          `<div class="stat-bar" style="width:${Math.round(v.trips/maxTrips*100)}%;background:var(--ac-red)"></div>`
+        }</div>
+        <span class="stat-num" style="color:${v.adjOnly?'var(--ac-light)':'var(--ac-charcoal)'}">${v.adjOnly?'':v.trips}</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">${[...v.years].sort()[0]}${v.years.size>1?'–'+[...v.years].sort().slice(-1)[0]:''}</span>
+      </div>`).join('')}`;
+}
+
+function drillTripContinent(cont) {
+  const isCouple = currentFilter==='couple';
+  const ts = getTravelers();
+
+  // Highlight selected row
+  document.querySelectorAll('.trip-cont-row').forEach(r => {
+    const active = r.dataset.cont === cont;
+    r.style.background = active ? 'var(--ac-red-light)' : '';
+    r.querySelector('.stat-name').style.color = active ? 'var(--ac-red)' : '';
+    r.querySelector('.stat-num').style.color = active ? 'var(--ac-red)' : '';
+  });
+
+  // Aggregate non-leg trips per country in this continent
+  const rows = TRIPS.filter(r => r.Continent === cont && !r.Adj);
+  const countryMap = {};
+  rows.forEach(row => {
+    const n = isCouple ? Math.min(row.Marc||0, row.Annie||0) : ts.reduce((s,t)=>s+(row[t]||0),0);
+    if (n > 0) {
+      if (!countryMap[row.Country]) countryMap[row.Country] = {trips:0, years:new Set()};
+      countryMap[row.Country].trips += n;
+      countryMap[row.Country].years.add(row.Year);
+    }
+  });
+
+  const sorted = Object.entries(countryMap).sort(([,a],[,b])=>b.trips-a.trips);
+  const totalTrips = sorted.reduce((s,[,v])=>s+v.trips,0);
+  const drill = document.getElementById('tripContDrill');
+
+  if (!sorted.length) {
+    drill.innerHTML = `<div style="font-size:12px;color:var(--ac-light);padding:12px 0">${cont} — no trips logged</div>`;
+    return;
+  }
+
+  const maxT = sorted[0][1].trips;
+  drill.innerHTML = `
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-red);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--ac-red);">${cont} — ${totalTrips} trip${totalTrips!==1?'s':''}</div>
+    ${sorted.map(([country,v])=>`
+      <div class="stat-row">
+        <span class="stat-name" style="min-width:100px">${country}</span>
+        <div class="stat-bar-wrap"><div class="stat-bar" style="width:${Math.round(v.trips/maxT*100)}%;background:var(--ac-red)"></div></div>
+        <span class="stat-num">${v.trips}</span>
+        <span style="font-size:10px;color:var(--ac-light);margin-left:10px;min-width:60px;text-align:right">${[...v.years].sort()[0]}${v.years.size>1?'–'+[...v.years].sort().slice(-1)[0]:''}</span>
+      </div>`).join('')}`;
+}
+
+function drillYear(year) {
+  const isCouple = currentFilter==='couple';
+  const ts = getTravelers();
+
+  // All trip legs for this year (including legs), filtered to active travelers
+  const rows = TRIPS.filter(r => {
+    if (r.Year !== year) return false;
+    const n = isCouple ? Math.min(r.Marc||0, r.Annie||0) : ts.reduce((s,t)=>s+(r[t]||0),0);
+    return n > 0;
+  });
+
+  const drill = document.getElementById('yearDrill');
+  if (!rows.length) {
+    drill.innerHTML = `<div style="font-size:12px;color:var(--ac-light);padding:12px 0">${year} — no trips logged</div>`;
+    return;
+  }
+
+  const totalLegs = rows.length;
+  drill.innerHTML = `
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-red);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--ac-red);">${year} — ${totalLegs} destination${totalLegs!==1?'s':''}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--ac-rule);">
+          <th style="text-align:left;padding:4px 8px 6px 0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ac-light);">Country</th>
+          <th style="text-align:left;padding:4px 8px 6px 0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ac-light);">City</th>
+          <th style="text-align:left;padding:4px 0 6px 0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--ac-light);">Travelers</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r=>`
+        <tr style="border-bottom:1px solid var(--ac-rule);">
+          <td style="padding:6px 8px 6px 0;color:var(--ac-black);font-weight:500;">${r.Country}${r.Adj?` <span style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--ac-light);background:var(--ac-bg);padding:1px 5px;border-radius:2px;border:1px solid var(--ac-rule);">leg</span>`:''}
+          </td>
+          <td style="padding:6px 8px 6px 0;color:var(--ac-mid);">${r.City}</td>
+          <td style="padding:6px 0;">
+            ${TRAVELERS.filter(t=>r[t]>0).map(t=>`<span class="traveler-tag tag-${t}">${t}</span>`).join('')}
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ─── Editor ──────────────────────────────────────────────────────
+function sortTrips() {
+  TRIPS.sort((a,b) => a.Year - b.Year);
+}
+
+function addTrip() {
+  const country = document.getElementById('fCountry').value.trim();
+  const city = document.getElementById('fCity').value.trim();
+  const continent = document.getElementById('fContinent').value;
+  const year = parseInt(document.getElementById('fYear').value);
+  const adj = document.getElementById('fAdj').value;
+  const travelersChosen = TRAVELERS.filter(t=>document.getElementById('cb'+t).checked);
+
+  const msg = document.getElementById('formMsg');
+  if (!country||!city||!continent||!year||!travelersChosen.length) {
+    msg.className='msg error'; msg.textContent='Please fill in country, city, continent, year, and at least one traveler.'; return;
+  }
+
+  const row = {Country:country,City:city,Continent:continent,Year:year,Adj:adj};
+  TRAVELERS.forEach(t=>{ row[t]=travelersChosen.includes(t)?1:0; });
+  TRIPS.push(row);
+  sortTrips();
+  saveTrips(TRIPS);
+  STATS = computeStats(TRIPS);
+  renderDashboard();
+  renderTripTable();
+
+  ['fCountry','fCity'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fContinent').value='';
+  document.getElementById('fYear').value='';
+  document.getElementById('fAdj').value='';
+  TRAVELERS.forEach(t=>document.getElementById('cb'+t).checked=false);
+  msg.className='msg success'; msg.textContent=`Trip to ${city}, ${country} (${year}) added successfully.`;
+  setTimeout(()=>msg.style.display='none',3000);
+}
+
+function deleteTrip(idx) {
+  if (!confirm('Delete this trip?')) return;
+  TRIPS.splice(idx,1);
+  saveTrips(TRIPS);
+  STATS = computeStats(TRIPS);
+  renderDashboard();
+  renderTripTable();
+}
+
+function editTrip(idx) {
+  const r = TRIPS[idx];
+  const row = document.querySelector(`tr[data-idx="${idx}"]`);
+  if (!row) return;
+  row.classList.add('editing');
+
+  const contOpts = ['Europe','North America','Asia','Carribean','Oceania','Central America','South America','Africa']
+    .map(c=>`<option value="${c}"${c===r.Continent?' selected':''}>${c}</option>`).join('');
+
+  row.innerHTML = `
+    <td style="font-size:11px;color:var(--ac-light)">${idx+1}</td>
+    <td><input class="cell-input narrow" id="eYear_${idx}" type="number" value="${r.Year}" min="1980" max="2099"></td>
+    <td><input class="cell-input" id="eCountry_${idx}" type="text" value="${r.Country}"></td>
+    <td><input class="cell-input" id="eCity_${idx}" type="text" value="${r.City}"></td>
+    <td><select class="cell-input" id="eContinent_${idx}">${contOpts}</select></td>
+    <td style="white-space:nowrap">${TRAVELERS.map(t=>`<label style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;font-size:11px;cursor:pointer"><input type="checkbox" class="cell-cb" id="eCb${t}_${idx}"${r[t]>0?' checked':''}> ${t}</label>`).join('')}</td>
+    <td><select class="cell-input" id="eAdj_${idx}" style="max-width:70px"><option value="">No</option><option value="Yes"${r.Adj==='Yes'?' selected':''}>Yes</option></select></td>
+    <td style="color:var(--ac-light);font-size:11px">—</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-save" onclick="saveTrip(${idx})">Save</button>
+      <button class="btn btn-cancel" onclick="renderTripTable()">Cancel</button>
+    </td>`;
+}
+
+function saveTrip(idx) {
+  const year = parseInt(document.getElementById(`eYear_${idx}`).value);
+  const country = document.getElementById(`eCountry_${idx}`).value.trim();
+  const city = document.getElementById(`eCity_${idx}`).value.trim();
+  const continent = document.getElementById(`eContinent_${idx}`).value;
+  const adj = document.getElementById(`eAdj_${idx}`).value;
+  if (!country||!city||!continent||!year) { alert('Country, city, continent and year are required.'); return; }
+
+  TRIPS[idx] = { ...TRIPS[idx], Year:year, Country:country, City:city, Continent:continent, Adj:adj };
+  TRAVELERS.forEach(t=>{ TRIPS[idx][t] = document.getElementById(`eCb${t}_${idx}`).checked ? 1 : 0; });
+
+  sortTrips();
+  saveTrips(TRIPS);
+  STATS = computeStats(TRIPS);
+  renderDashboard();
+  renderTripTable();
+}
+
+function clearFilters() {
+  ['flt-year','flt-country','flt-city'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['flt-continent','flt-traveler','flt-adj'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  renderTripTable();
+}
+
+function renderTripTable() {
+  sortTrips();
+  const fYear     = (document.getElementById('flt-year')?.value || '').trim().toLowerCase();
+  const fCountry  = (document.getElementById('flt-country')?.value || '').trim().toLowerCase();
+  const fCity     = (document.getElementById('flt-city')?.value || '').trim().toLowerCase();
+  const fCont     = document.getElementById('flt-continent')?.value || '';
+  const fTraveler = document.getElementById('flt-traveler')?.value || '';
+  const fAdj      = document.getElementById('flt-adj')?.value || '';
+
+  const filtered = TRIPS.map((r,i)=>({...r,_i:i})).filter(r => {
+    if (fYear     && !String(r.Year).includes(fYear))                    return false;
+    if (fCountry  && !r.Country.toLowerCase().includes(fCountry))        return false;
+    if (fCity     && !r.City.toLowerCase().includes(fCity))              return false;
+    if (fCont     && r.Continent !== fCont)                              return false;
+    if (fTraveler && !(r[fTraveler] > 0))                                return false;
+    if (fAdj === 'adj' && !r.Adj)                                        return false;
+    if (fAdj === 'no'  &&  r.Adj)                                        return false;
+    return true;
+  });
+
+  document.getElementById('tripCount').textContent = `${filtered.length} of ${TRIPS.length} trips`;
+  const km = r => r.Adj ? '—' : Math.round(tripDist(r)*2).toLocaleString();
+  document.getElementById('tripTableBody').innerHTML = filtered.map(r=>`
+    <tr data-idx="${r._i}">
+      <td style="color:var(--ac-light);font-size:11px">${r._i+1}</td>
+      <td style="font-family:monospace;font-size:12px">${r.Year}</td>
+      <td>${r.Country}</td>
+      <td style="color:var(--ac-mid)">${r.City}</td>
+      <td style="color:var(--ac-mid)">${r.Continent}</td>
+      <td>${TRAVELERS.filter(t=>r[t]>0).map(t=>`<span class="traveler-tag tag-${t}">${t}</span>`).join('')}</td>
+      <td>${r.Adj?`<span class="adj-badge">leg</span>`:''}</td>
+      <td style="font-family:monospace;font-size:11px;color:var(--ac-light)">${km(r)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-edit" onclick="editTrip(${r._i})">Edit</button>
+        <button class="btn btn-danger" style="margin-left:4px" onclick="deleteTrip(${r._i})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ─── Tab switch ───────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('dashPanel').style.display   = tab==='dashboard'?'block':'none';
+  document.getElementById('editorPanel').style.display = tab==='editor'?'block':'none';
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',
+    (i===0&&tab==='dashboard')||(i===1&&tab==='editor')));
+  if (tab==='editor') renderTripTable();
+}
+
+// ─── Export ───────────────────────────────────────────────────────
+function exportHTML() {
+  const src = document.documentElement.outerHTML;
+  let exported = src.replace(/const SEED = \[[\s\S]*?\];/, `const SEED = ${JSON.stringify(TRIPS, null, 2)};`);
+  // Clear baked-in table rows so exported file always renders fresh
+  exported = exported.replace(/(<tbody id="tripTableBody">)[\s\S]*?(<\/tbody>)/, '$1$2');
+  const blob = new Blob([exported], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `travel_junkies_${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+}
+
+// ─── Init ────────────────────────────────────────────────────────
+// Migration: cap any traveler value > 1 to 1 and re-save
+(function() {
+  let changed = false;
+  TRIPS.forEach(r => {
+    TRAVELERS.forEach(t => {
+      if ((r[t]||0) > 1) { r[t] = 1; changed = true; }
+    });
+  });
+  if (changed) saveTrips(TRIPS);
+})();
+sortTrips();
+renderDashboard();
+</script>
+
+
+</body></html>
