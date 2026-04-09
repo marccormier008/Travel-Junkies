@@ -121,6 +121,7 @@
   .filter-btn:hover { border-color: var(--ac-red); color: var(--ac-red); }
   .filter-btn.active { background: var(--ac-red); color: var(--ac-white); border-color: var(--ac-red); }
   .filter-btn.couple.active { background: var(--ac-black); border-color: var(--ac-black); color: var(--ac-white); }
+  .filter-btn.family.active { background: var(--ac-red); border-color: var(--ac-red); color: var(--ac-white); }
 
   /* ── SECTION LABELS ── */
   .section-label {
@@ -382,7 +383,7 @@
   <div id="dashPanel" style="display: block;">
     <div class="filter-bar">
       <span class="filter-label">View:</span>
-      <button class="filter-btn active" onclick="setFilter('all')">All travelers</button>
+      <button class="filter-btn family active" onclick="setFilter('family')">Family</button>
       <button class="filter-btn couple" onclick="setFilter('couple')">Marc &amp; Annie</button>
       <button class="filter-btn" onclick="setFilter('Marc')">Marc</button>
       <button class="filter-btn" onclick="setFilter('Annie')">Annie</button>
@@ -2676,7 +2677,9 @@ function computeStats(trips) {
                   continentCountryUnion:{},  // {cont: Set<country>} — all travelers union, incl legs
                   topCountries:{},
                   coupleTrips:0, coupleKm:0, coupleCountries:new Set(), coupleYearly:{}, coupleYearlyKm:{},
-                  coupleContinent:{}, coupleTopCountries:{} };
+                  coupleContinent:{}, coupleTopCountries:{},
+                  familyTrips:0, familyKm:0, familyCountries:new Set(), familyYearly:{}, familyYearlyKm:{},
+                  familyContinent:{} };
   TRAVELERS.forEach(t => { stats.trips[t]=0; stats.countries[t]=new Set(); stats.km[t]=0; });
 
   // Pass 1: all rows including legs — countries and continent country sets
@@ -2700,6 +2703,13 @@ function computeStats(trips) {
       stats.coupleCountries.add(row.Country);
       if (!stats.coupleContinent[cont]) stats.coupleContinent[cont] = new Set();
       stats.coupleContinent[cont].add(row.Country);
+    }
+    // Family countries (all 5 travelers)
+    const familyN = Math.min(row.Marc||0, row.Annie||0, row.Erika||0, row.Victoria||0, row.Ryan||0);
+    if (familyN > 0) {
+      stats.familyCountries.add(row.Country);
+      if (!stats.familyContinent[cont]) stats.familyContinent[cont] = new Set();
+      stats.familyContinent[cont].add(row.Country);
     }
   });
 
@@ -2727,6 +2737,17 @@ function computeStats(trips) {
       stats.coupleYearlyKm[yr] = (stats.coupleYearlyKm[yr]||0) + coupleN * d;
       stats.coupleTopCountries[row.Country] = (stats.coupleTopCountries[row.Country]||0) + coupleN;
     }
+    const familyN = Math.min(row.Marc||0, row.Annie||0, row.Erika||0, row.Victoria||0, row.Ryan||0);
+    if (familyN > 0) {
+      stats.familyTrips += familyN;
+      stats.familyKm += familyN * d;
+      const yr = row.Year;
+      stats.familyYearly[yr] = (stats.familyYearly[yr]||0) + familyN;
+      stats.familyYearlyKm[yr] = (stats.familyYearlyKm[yr]||0) + familyN * d;
+      const cont = row.Continent;
+      if (!stats.familyContinent[cont]) stats.familyContinent[cont] = new Set();
+      stats.familyContinent[cont].add(row.Country);
+    }
     if (!stats.topCountries[row.Country]) stats.topCountries[row.Country] = {};
     TRAVELERS.forEach(t => { stats.topCountries[row.Country][t] = (stats.topCountries[row.Country][t]||0) + (row[t]||0); });
   });
@@ -2734,18 +2755,22 @@ function computeStats(trips) {
   // Finalise Sets → counts
   TRAVELERS.forEach(t => { stats.countries[t] = stats.countries[t].size; });
   stats.coupleCountries = stats.coupleCountries.size;
+  stats.familyCountries = stats.familyCountries.size;
   Object.keys(stats.coupleContinent).forEach(cont => {
     stats.coupleContinent[cont] = stats.coupleContinent[cont].size;
+  });
+  Object.keys(stats.familyContinent).forEach(cont => {
+    stats.familyContinent[cont] = stats.familyContinent[cont].size;
   });
   return stats;
 }
 
 let STATS = computeStats(TRIPS);
-let currentFilter = 'all';
+let currentFilter = 'family';
 let chartInsts = {};
 
 function getTravelers() {
-  if (currentFilter==='all') return TRAVELERS;
+  if (currentFilter==='family') return TRAVELERS;
   if (currentFilter==='couple') return ['Marc','Annie'];
   return [currentFilter];
 }
@@ -2755,10 +2780,11 @@ function sumFor(obj) { return getTravelers().reduce((s,t)=>s+(obj[t]||0),0); }
 function setFilter(f) {
   currentFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b => {
-    const lbl = b.textContent.trim().replace(/\s+/g,' ');
     const isCouple = b.classList.contains('couple');
+    const isFamily = b.classList.contains('family');
     b.classList.toggle('active',
-      (f==='all'&&lbl==='All travelers') || (f==='couple'&&isCouple) || (!isCouple&&lbl===f));
+      (f==='family'&&isFamily) || (f==='couple'&&isCouple) ||
+      (!isCouple&&!isFamily&&b.textContent.trim()===f));
   });
   renderDashboard();
 }
@@ -2767,16 +2793,14 @@ function setFilter(f) {
 function renderDashboard() {
   const ts = getTravelers();
   const isCouple = currentFilter==='couple';
-  const trips = isCouple ? STATS.coupleTrips : ts.reduce((s,t)=>s+STATS.trips[t],0);
-  const countries = currentFilter==='all'
-    ? new Set(TRIPS.map(r=>r.Country)).size
-    : isCouple ? STATS.coupleCountries
-    : STATS.countries[currentFilter];
-  const totalKm = isCouple ? STATS.coupleKm : ts.reduce((s,t)=>s+STATS.km[t],0);
+  const isFamily = currentFilter==='family';
+  const trips    = isFamily ? STATS.familyTrips : isCouple ? STATS.coupleTrips : ts.reduce((s,t)=>s+STATS.trips[t],0);
+  const countries = isFamily ? STATS.familyCountries : isCouple ? STATS.coupleCountries : STATS.countries[currentFilter];
+  const totalKm  = isFamily ? STATS.familyKm : isCouple ? STATS.coupleKm : ts.reduce((s,t)=>s+STATS.km[t],0);
   const earthLaps = (totalKm/40075).toFixed(1);
 
   document.getElementById('metricGrid1').innerHTML = [
-    {label:'Total trips', value:trips.toLocaleString(), sub: isCouple?'common trips only':currentFilter==='all'?'all travelers':currentFilter},
+    {label:'Total trips', value:trips.toLocaleString(), sub: isFamily?'family trips only':isCouple?'common trips only':currentFilter},
     {label:'Countries visited', value:countries, sub:'unique countries', hi:true},
   ].map(c=>`<div class="metric-card${c.hi?' hi':''}"><div class="metric-label">${c.label}</div><div class="metric-value">${c.value}</div><div class="metric-sub">${c.sub}</div></div>`).join('');
 
@@ -2789,35 +2813,32 @@ function renderDashboard() {
   const years = Object.keys(STATS.yearly).map(Number).sort((a,b)=>a-b);
 
   // Year chart
-  document.getElementById('legYear').innerHTML = (isCouple?[['Marc & Annie',COUPLE_COLOR]]:ts.map(t=>[t,COLORS[t]]))
-    .map(([n,c])=>`<span class="leg-item"><span class="leg-dot" style="background:${c}"></span>${n}</span>`).join('');
+  document.getElementById('legYear').innerHTML = (isFamily||isCouple)?
+    `<span class="leg-item"><span class="leg-dot" style="background:${COUPLE_COLOR}"></span>${isFamily?'Family':'Marc & Annie'}</span>` :
+    ts.map(t=>`<span class="leg-item"><span class="leg-dot" style="background:${COLORS[t]}"></span>${t}</span>`).join('');
   mkChart('yearChart','line',{
     labels:years,
-    datasets: isCouple ? [{label:'Marc & Annie',data:years.map(y=>STATS.coupleYearly[y]||0),borderColor:COUPLE_COLOR,backgroundColor:COUPLE_COLOR+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}]
+    datasets: isFamily ? [{label:'Family',data:years.map(y=>STATS.familyYearly[y]||0),borderColor:COUPLE_COLOR,backgroundColor:COUPLE_COLOR+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}]
+      : isCouple ? [{label:'Marc & Annie',data:years.map(y=>STATS.coupleYearly[y]||0),borderColor:COUPLE_COLOR,backgroundColor:COUPLE_COLOR+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}]
       : ts.map(t=>({label:t,data:years.map(y=>STATS.yearly[y]?.[t]||0),borderColor:COLORS[t],backgroundColor:COLORS[t]+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}))
   },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{color:'rgba(128,128,128,0.08)'}},y:{ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.08)'}}}});
 
   // KM chart
-  document.getElementById('legKm').innerHTML = (isCouple?[['Marc & Annie',COUPLE_COLOR]]:ts.map(t=>[t,COLORS[t]]))
-    .map(([n,c])=>`<span class="leg-item"><span class="leg-dot" style="background:${c}"></span>${n}</span>`).join('');
+  document.getElementById('legKm').innerHTML = (isFamily||isCouple)?
+    `<span class="leg-item"><span class="leg-dot" style="background:${COUPLE_COLOR}"></span>${isFamily?'Family':'Marc & Annie'}</span>` :
+    ts.map(t=>`<span class="leg-item"><span class="leg-dot" style="background:${COLORS[t]}"></span>${t}</span>`).join('');
   mkChart('kmChart','bar',{
     labels:years,
-    datasets: isCouple ? [{label:'Marc & Annie',data:years.map(y=>STATS.coupleYearlyKm[y]||0),backgroundColor:COUPLE_COLOR+'bb',borderWidth:0}]
+    datasets: isFamily ? [{label:'Family',data:years.map(y=>STATS.familyYearlyKm[y]||0),backgroundColor:COUPLE_COLOR+'bb',borderWidth:0}]
+      : isCouple ? [{label:'Marc & Annie',data:years.map(y=>STATS.coupleYearlyKm[y]||0),backgroundColor:COUPLE_COLOR+'bb',borderWidth:0}]
       : ts.map(t=>({label:t,data:years.map(y=>STATS.yearlyKm[y]?.[t]||0),backgroundColor:COLORS[t]+'bb',borderWidth:0}))
   },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${Math.round(c.raw).toLocaleString()} km`}}},scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{display:false}},y:{ticks:{font:{size:10},callback:v=>v>=1000?Math.round(v/1000)+'K':v},grid:{color:'rgba(128,128,128,0.08)'}}}});
 
   // Continent bars — unique countries visited (union across selected travelers, incl legs)
   const contUnionCount = (cont) => {
+    if (isFamily) return STATS.familyContinent[cont] || 0;
     if (isCouple) return STATS.coupleContinent[cont] || 0;
-    if (currentFilter !== 'all') {
-      return STATS.continentCountrySets[cont]?.[currentFilter]?.size || 0;
-    }
-    // All travelers: union of all traveler Sets for this continent
-    const union = new Set();
-    TRAVELERS.forEach(t => {
-      (STATS.continentCountrySets[cont]?.[t] || new Set()).forEach(c => union.add(c));
-    });
-    return union.size;
+    return STATS.continentCountrySets[cont]?.[currentFilter]?.size || 0;
   };
 
   const allConts = Object.keys(STATS.continentCountrySets||{});
@@ -2836,6 +2857,10 @@ function renderDashboard() {
 
   // Trips by continent bars (non-leg only)
   const tripContData = (cont) => {
+    if (isFamily) {
+      return TRIPS.filter(r=>!r.Adj&&r.Continent===cont)
+        .reduce((s,r)=>s+Math.min(r.Marc||0,r.Annie||0,r.Erika||0,r.Victoria||0,r.Ryan||0),0);
+    }
     if (isCouple) {
       return TRIPS.filter(r=>!r.Adj&&r.Continent===cont)
         .reduce((s,r)=>s+Math.min(r.Marc||0,r.Annie||0),0);
@@ -2858,8 +2883,8 @@ function renderDashboard() {
   // Year dropdown — all years including current and future, most recent first
   const allYears = Object.keys(STATS.yearly).map(Number).sort((a,b)=>b-a);
   const yearTripCount = y => {
-    // Include leg trips in the year bar count
     const allRowsYear = TRIPS.filter(r => r.Year === y);
+    if (isFamily) return allRowsYear.reduce((s,r)=>s+Math.min(r.Marc||0,r.Annie||0,r.Erika||0,r.Victoria||0,r.Ryan||0),0);
     if (isCouple) return allRowsYear.reduce((s,r)=>s+Math.min(r.Marc||0,r.Annie||0),0);
     return allRowsYear.reduce((s,r)=>s+ts.reduce((ss,t)=>ss+(r[t]||0),0),0);
   };
@@ -2871,9 +2896,9 @@ function renderDashboard() {
   // Pre-select most recent year
   if (allYears.length) { sel.value = allYears[0]; drillYear(allYears[0]); }
 
-  // Traveler summary table — all travelers view only
-  const showSummary = currentFilter === 'all';
-  const showTogether = currentFilter === 'all' || currentFilter === 'couple' || currentFilter === 'Marc' || currentFilter === 'Annie';
+  // Traveler summary table — family view only
+  const showSummary = isFamily;
+  const showTogether = isFamily || isCouple || currentFilter === 'Marc' || currentFilter === 'Annie';
   document.getElementById('travelerSummaryCard').style.display = showSummary ? 'block' : 'none';
   document.getElementById('togetherChartCard').style.display   = showTogether ? 'block' : 'none';
 
@@ -2920,8 +2945,7 @@ function renderDashboard() {
     },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{font:{size:9},maxRotation:45},grid:{display:false}},y:{stacked:true,ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.08)'}}}});
   }
 
-  // Header meta
-  const totalTrips = TRAVELERS.reduce((s,t)=>s+STATS.trips[t],0);
+  // Header meta — always shows overall family totals
   const totalCountries = new Set(TRIPS.map(r=>r.Country)).size;
   document.getElementById('headerMeta').textContent = `${TRIPS.filter(r=>!r.Adj).length} trips · ${totalCountries} countries · ${Math.round(TRAVELERS.reduce((s,t)=>s+STATS.km[t],0)).toLocaleString()} km flown`;
 }
@@ -2933,6 +2957,7 @@ function mkChart(id, type, data, options) {
 
 function drillContinent(cont) {
   const isCouple = currentFilter==='couple';
+  const isFamily = currentFilter==='family';
   const ts = getTravelers();
 
   // Highlight selected row
@@ -2948,7 +2973,7 @@ function drillContinent(cont) {
   const countryMap = {};
   allRows.forEach(row => {
     if (!countryMap[row.Country]) countryMap[row.Country] = {trips:0, years:new Set(), adjOnly:true};
-    const n = isCouple ? Math.min(row.Marc||0, row.Annie||0) : ts.reduce((s,t)=>s+(row[t]||0),0);
+    const n = isFamily ? Math.min(row.Marc||0,row.Annie||0,row.Erika||0,row.Victoria||0,row.Ryan||0) : isCouple ? Math.min(row.Marc||0, row.Annie||0) : ts.reduce((s,t)=>s+(row[t]||0),0);
     if (n > 0) {
       countryMap[row.Country].years.add(row.Year);
       if (!row.Adj) {
@@ -2989,6 +3014,7 @@ function drillContinent(cont) {
 
 function drillTripContinent(cont) {
   const isCouple = currentFilter==='couple';
+  const isFamily = currentFilter==='family';
   const ts = getTravelers();
 
   // Highlight selected row
@@ -3003,7 +3029,7 @@ function drillTripContinent(cont) {
   const rows = TRIPS.filter(r => r.Continent === cont && !r.Adj);
   const countryMap = {};
   rows.forEach(row => {
-    const n = isCouple ? Math.min(row.Marc||0, row.Annie||0) : ts.reduce((s,t)=>s+(row[t]||0),0);
+    const n = isFamily ? Math.min(row.Marc||0,row.Annie||0,row.Erika||0,row.Victoria||0,row.Ryan||0) : isCouple ? Math.min(row.Marc||0, row.Annie||0) : ts.reduce((s,t)=>s+(row[t]||0),0);
     if (n > 0) {
       if (!countryMap[row.Country]) countryMap[row.Country] = {trips:0, years:new Set()};
       countryMap[row.Country].trips += n;
@@ -3034,12 +3060,13 @@ function drillTripContinent(cont) {
 
 function drillYear(year) {
   const isCouple = currentFilter==='couple';
+  const isFamily = currentFilter==='family';
   const ts = getTravelers();
 
   // All trip legs for this year (including legs), filtered to active travelers
   const rows = TRIPS.filter(r => {
     if (r.Year !== year) return false;
-    const n = isCouple ? Math.min(r.Marc||0, r.Annie||0) : ts.reduce((s,t)=>s+(r[t]||0),0);
+    const n = isFamily ? Math.min(r.Marc||0,r.Annie||0,r.Erika||0,r.Victoria||0,r.Ryan||0) : isCouple ? Math.min(r.Marc||0, r.Annie||0) : ts.reduce((s,t)=>s+(r[t]||0),0);
     return n > 0;
   });
 
