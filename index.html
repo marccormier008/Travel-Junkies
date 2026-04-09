@@ -410,15 +410,13 @@
       </div>
       <div class="chart-card full">
         <div class="chart-title">Trips per year — destinations</div>
-        <div style="display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start">
-          <div>
-            <select id="yearSelect" class="col-filter-sel" onchange="drillYear(parseInt(this.value))"
-              style="width:100%;font-size:13px;padding:8px 10px;background:var(--ac-white);color:var(--ac-black);border:1.5px solid var(--ac-rule);border-radius:var(--radius-sm);">
-            </select>
-          </div>
-          <div id="yearDrill">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-light);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--ac-rule);">Select a year</div>
-          </div>
+        <div style="margin-bottom:16px;">
+          <select id="yearSelect" class="col-filter-sel" onchange="drillYear(parseInt(this.value))"
+            style="width:100%;font-size:13px;padding:8px 10px;background:var(--ac-white);color:var(--ac-black);border:1.5px solid var(--ac-rule);border-radius:var(--radius-sm);">
+          </select>
+        </div>
+        <div id="yearDrill">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-light);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--ac-rule);">Select a year</div>
         </div>
       </div>
       <div class="chart-card full">
