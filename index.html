@@ -1617,7 +1617,7 @@ const SEED = [
   },
   {
     "Country": "Portugal",
-    "City": "Alguave, Lison",
+    "City": "Lisbon",
     "Continent": "Europe",
     "Year": 2016,
     "Marc": 1,
@@ -2644,10 +2644,18 @@ function hav(p1, p2) {
   return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 function tripDist(trip) {
-  let coords = AIRPORT_COORDS[trip.City] || null;
+  const cityLookup = (name) => {
+    if (!name) return null;
+    if (AIRPORT_COORDS[name]) return AIRPORT_COORDS[name];
+    // Case-insensitive fallback
+    const lower = name.toLowerCase();
+    const key = Object.keys(AIRPORT_COORDS).find(k => k.toLowerCase() === lower);
+    return key ? AIRPORT_COORDS[key] : null;
+  };
+  let coords = cityLookup(trip.City);
   if (!coords) {
     const firstCity = trip.City.split(',')[0].trim();
-    coords = AIRPORT_COORDS[firstCity] || null;
+    coords = cityLookup(firstCity);
   }
   if (!coords) return 0;
   const cont = trip.Continent;
