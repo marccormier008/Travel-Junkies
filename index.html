@@ -262,7 +262,17 @@
   .btn-save:hover { background: var(--ac-charcoal); }
   .btn-cancel { background: transparent; color: var(--ac-mid); border: 1.5px solid var(--ac-rule); font-size: 10px; padding: 4px 10px; margin-left: 4px; }
   .btn-cancel:hover { border-color: var(--ac-mid); }
-  .col-filter {
+  .traveler-filter-btn {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 7px; border-radius: 2px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+    transition: all 0.12s;
+  }
+  .traveler-filter-btn.active {
+    background: var(--ac-red); border-color: var(--ac-red); color: var(--ac-white);
+  }
     font-family: 'Noto Sans', sans-serif;
     font-size: 11px;
     padding: 4px 7px;
@@ -320,7 +330,7 @@
   }
   .trip-table td { padding: 9px 14px; border-bottom: 1px solid var(--ac-rule); color: var(--ac-charcoal); vertical-align: middle; }
   .trip-table tr:last-child td { border-bottom: none; }
-  .trip-table tr:hover td { background: var(--ac-red-light); }
+  .trip-table tbody tr:hover td { background: var(--ac-bg); }
   .traveler-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 2px; margin: 1px; letter-spacing: 0.04em; text-transform: uppercase; }
   .tag-Marc { background: #e8f1fb; color: #1a3a6b; }
   .tag-Annie { background: #e6f5ef; color: #0a4a30; }
@@ -365,7 +375,7 @@
     <svg class="maple-leaf" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M50 5 L57 35 L88 28 L72 50 L95 65 L65 62 L68 90 L50 78 L32 90 L35 62 L5 65 L28 50 L12 28 L43 35 Z" fill="#D82F2E"></path>
     </svg>
-    <span class="topbar-title">Travel Junkies <span>/ Flight Log</span></span>
+    <span class="topbar-title">Travel Junkies</span>
   </div>
   <span class="topbar-meta" id="headerMeta">132 trips · 39 countries · 3,366,869 km flown</span>
 </nav>
@@ -374,7 +384,7 @@
 <!-- TAB NAV -->
 <div class="tab-nav">
   <button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
-  <button class="tab" onclick="switchTab('editor')">Edit Trips</button>
+  <button class="tab" onclick="switchTab('editor')">Flight Log</button>
 </div>
 
 <div class="main">
@@ -559,24 +569,20 @@
 
   <!-- ── EDITOR ── -->
   <div id="editorPanel" style="display: none;">
-    <div class="editor-intro">
-      <strong>How to keep this dashboard up to date:</strong> Use this tab to add new trips directly in the browser — no spreadsheet needed. All data is saved to <code>localStorage</code> in your browser, so it persists between sessions on this device. When you want to share or back up your data, click <strong>Export HTML</strong> to download a fresh standalone file with all your trips baked in.
-    </div>
-
     <div class="add-form">
       <div class="form-title">Add a new trip</div>
       <div id="formMsg" class="msg success" style="display: none;">Trip to Vancouver, Canada (2022) added successfully.</div>
       <div class="form-grid">
         <div class="form-group">
-          <label>Country *</label>
+          <label>Country</label>
           <input type="text" id="fCountry" placeholder="e.g. Japan">
         </div>
         <div class="form-group">
-          <label>City *</label>
+          <label>City</label>
           <input type="text" id="fCity" placeholder="e.g. Tokyo">
         </div>
         <div class="form-group">
-          <label>Continent *</label>
+          <label>Continent</label>
           <select id="fContinent">
             <option value="">Select…</option>
             <option>Europe</option>
@@ -590,7 +596,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Year *</label>
+          <label>Year</label>
           <input type="number" id="fYear" placeholder="2026" min="1980" max="2099">
         </div>
         <div class="form-group">
@@ -599,7 +605,7 @@
         </div>
       </div>
       <div class="form-group" style="margin-bottom:1.25rem">
-        <label>Travelers *</label>
+        <label>Travelers</label>
         <div class="travelers-check" style="margin-top:4px">
           <label><input type="checkbox" id="cbMarc" value="Marc"> Marc</label>
           <label><input type="checkbox" id="cbAnnie" value="Annie"> Annie</label>
@@ -644,14 +650,13 @@
               </select>
             </td>
             <td>
-              <select class="col-filter-sel" id="flt-traveler" onchange="renderTripTable()">
-                <option value="">All</option>
-                <option>Marc</option>
-                <option>Annie</option>
-                <option>Erika</option>
-                <option>Victoria</option>
-                <option>Ryan</option>
-              </select>
+              <div id="flt-traveler-btns" style="display:flex;flex-wrap:wrap;gap:3px;">
+                <button class="traveler-filter-btn" data-t="Marc"     onclick="toggleTravelerFilter('Marc')"    >Marc</button>
+                <button class="traveler-filter-btn" data-t="Annie"    onclick="toggleTravelerFilter('Annie')"   >Annie</button>
+                <button class="traveler-filter-btn" data-t="Erika"    onclick="toggleTravelerFilter('Erika')"   >Erika</button>
+                <button class="traveler-filter-btn" data-t="Victoria" onclick="toggleTravelerFilter('Victoria')">Victoria</button>
+                <button class="traveler-filter-btn" data-t="Ryan"     onclick="toggleTravelerFilter('Ryan')"    >Ryan</button>
+              </div>
             </td>
             <td>
               <select class="col-filter-sel" id="flt-adj" onchange="renderTripTable()">
@@ -720,7 +725,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "noFly": true
   },
   {
     "Country": "USA",
@@ -732,7 +738,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "noFly": true
   },
   {
     "Country": "USA",
@@ -744,7 +751,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "noFly": true
   },
   {
     "Country": "USA",
@@ -758,7 +766,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "noFly": true
   },
   {
     "Country": "USA",
@@ -770,7 +779,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "noFly": true
   },
   {
     "Country": "USA",
@@ -782,7 +792,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "noFly": true
   },
   {
     "Country": "USA",
@@ -794,7 +805,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "noFly": true
   },
   {
     "Country": "Mexico",
@@ -1338,7 +1350,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "noFly": true
   },
   {
     "Country": "Spain",
@@ -2633,6 +2646,12 @@ function loadTrips() {
 function saveTrips(trips) {
   localStorage.setItem('tj_trips', JSON.stringify(trips));
 }
+function roundKm(km) {
+  return Math.round(km / 5000) * 5000;
+}
+function fmtKm(km) {
+  return roundKm(km).toLocaleString() + ' km';
+}
 
 let TRIPS = loadTrips();
 if (!TRIPS.length) { TRIPS = JSON.parse(JSON.stringify(SEED)); saveTrips(TRIPS); }
@@ -2645,6 +2664,7 @@ function hav(p1, p2) {
   return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 function tripDist(trip) {
+  if (trip.noFly) return 0;
   const cityLookup = (name) => {
     if (!name) return null;
     if (AIRPORT_COORDS[name]) return AIRPORT_COORDS[name];
@@ -2805,7 +2825,7 @@ function renderDashboard() {
   ].map(c=>`<div class="metric-card${c.hi?' hi':''}"><div class="metric-label">${c.label}</div><div class="metric-value">${c.value}</div><div class="metric-sub">${c.sub}</div></div>`).join('');
 
   document.getElementById('metricGrid2').innerHTML = [
-    {label:'Total km flown (RT)', value:Math.round(totalKm).toLocaleString()+' km', sub:'round-trip from YUL'},
+    {label:'Total km flown (RT)', value:fmtKm(totalKm), sub:'round-trip from YUL'},
     {label:'Earth laps equivalent', value:earthLaps+'×', sub:'× Earth circumference (40,075 km)'},
   ].map(c=>`<div class="metric-card${c.hi?' hi':''}"><div class="metric-label">${c.label}</div><div class="metric-value">${c.value}</div><div class="metric-sub">${c.sub}</div></div>`).join('');
 
@@ -2918,14 +2938,14 @@ function renderDashboard() {
           ${TRAVELERS.map((t,i) => {
             const tTrips     = STATS.trips[t] || 0;
             const tCountries = STATS.countries[t] || 0;
-            const tKm        = Math.round(STATS.km[t] || 0).toLocaleString();
+            const tKm        = fmtKm(STATS.km[t] || 0);
             return `<tr style="${i%2===0?'background:var(--ac-white)':'background:var(--ac-bg)'}">
               <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);font-weight:500;">
                 <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${COLORS_MAP[t]};margin-right:8px;vertical-align:middle;"></span>${t}
               </td>
               <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);text-align:right;font-family:monospace;font-size:12px;">${tTrips}</td>
               <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);text-align:right;font-family:monospace;font-size:12px;">${tCountries}</td>
-              <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);text-align:right;font-family:monospace;font-size:12px;">${tKm} km</td>
+              <td style="padding:9px 14px;border-bottom:1px solid var(--ac-rule);text-align:right;font-family:monospace;font-size:12px;">${tKm}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -2947,7 +2967,7 @@ function renderDashboard() {
 
   // Header meta — always shows overall family totals
   const totalCountries = new Set(TRIPS.map(r=>r.Country)).size;
-  document.getElementById('headerMeta').textContent = `${TRIPS.filter(r=>!r.Adj).length} trips · ${totalCountries} countries · ${Math.round(TRAVELERS.reduce((s,t)=>s+STATS.km[t],0)).toLocaleString()} km flown`;
+  document.getElementById('headerMeta').textContent = `${TRIPS.filter(r=>!r.Adj).length} trips · ${totalCountries} countries · ${fmtKm(TRAVELERS.reduce((s,t)=>s+STATS.km[t],0))} flown`;
 }
 
 function mkChart(id, type, data, options) {
@@ -3188,34 +3208,51 @@ function saveTrip(idx) {
   renderTripTable();
 }
 
+let activeTravelerFilters = new Set();
+
+function toggleTravelerFilter(t) {
+  if (activeTravelerFilters.has(t)) activeTravelerFilters.delete(t);
+  else activeTravelerFilters.add(t);
+  document.querySelectorAll('.traveler-filter-btn').forEach(b => {
+    b.classList.toggle('active', activeTravelerFilters.has(b.dataset.t));
+  });
+  renderTripTable();
+}
+
 function clearFilters() {
   ['flt-year','flt-country','flt-city'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-  ['flt-continent','flt-traveler','flt-adj'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['flt-continent','flt-adj'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  activeTravelerFilters.clear();
+  document.querySelectorAll('.traveler-filter-btn').forEach(b => b.classList.remove('active'));
   renderTripTable();
 }
 
 function renderTripTable() {
   sortTrips();
-  const fYear     = (document.getElementById('flt-year')?.value || '').trim().toLowerCase();
-  const fCountry  = (document.getElementById('flt-country')?.value || '').trim().toLowerCase();
-  const fCity     = (document.getElementById('flt-city')?.value || '').trim().toLowerCase();
-  const fCont     = document.getElementById('flt-continent')?.value || '';
-  const fTraveler = document.getElementById('flt-traveler')?.value || '';
-  const fAdj      = document.getElementById('flt-adj')?.value || '';
+  const fYear    = (document.getElementById('flt-year')?.value || '').trim().toLowerCase();
+  const fCountry = (document.getElementById('flt-country')?.value || '').trim().toLowerCase();
+  const fCity    = (document.getElementById('flt-city')?.value || '').trim().toLowerCase();
+  const fCont    = document.getElementById('flt-continent')?.value || '';
+  const fAdj     = document.getElementById('flt-adj')?.value || '';
 
   const filtered = TRIPS.map((r,i)=>({...r,_i:i})).filter(r => {
-    if (fYear     && !String(r.Year).includes(fYear))                    return false;
-    if (fCountry  && !r.Country.toLowerCase().includes(fCountry))        return false;
-    if (fCity     && !r.City.toLowerCase().includes(fCity))              return false;
-    if (fCont     && r.Continent !== fCont)                              return false;
-    if (fTraveler && !(r[fTraveler] > 0))                                return false;
-    if (fAdj === 'adj' && !r.Adj)                                        return false;
-    if (fAdj === 'no'  &&  r.Adj)                                        return false;
+    if (fYear    && !String(r.Year).includes(fYear))               return false;
+    if (fCountry && !r.Country.toLowerCase().includes(fCountry))   return false;
+    if (fCity    && !r.City.toLowerCase().includes(fCity))         return false;
+    if (fCont    && r.Continent !== fCont)                         return false;
+    if (fAdj === 'adj' && !r.Adj)                                  return false;
+    if (fAdj === 'no'  &&  r.Adj)                                  return false;
+    // Multi-traveler: row must include ALL selected travelers
+    if (activeTravelerFilters.size > 0) {
+      for (const t of activeTravelerFilters) {
+        if (!(r[t] > 0)) return false;
+      }
+    }
     return true;
   });
 
   document.getElementById('tripCount').textContent = `${filtered.length} of ${TRIPS.length} trips`;
-  const km = r => r.Adj ? '—' : Math.round(tripDist(r)*2).toLocaleString();
+  const km = r => (r.Adj || r.noFly) ? '—' : Math.round(tripDist(r)*2).toLocaleString();
   document.getElementById('tripTableBody').innerHTML = filtered.map(r=>`
     <tr data-idx="${r._i}">
       <td style="color:var(--ac-light);font-size:11px">${r._i+1}</td>
@@ -3256,13 +3293,19 @@ function exportHTML() {
 }
 
 // ─── Init ────────────────────────────────────────────────────────
-// Migration: cap any traveler value > 1 to 1 and re-save
+// Migration: cap any traveler value > 1 to 1, and sync noFly flags from SEED
 (function() {
   let changed = false;
+  // Build a lookup of noFly trips from SEED by year+country+city
+  const noFlyKeys = new Set(
+    SEED.filter(s=>s.noFly).map(s=>`${s.Year}|${s.Country}|${s.City}`)
+  );
   TRIPS.forEach(r => {
     TRAVELERS.forEach(t => {
       if ((r[t]||0) > 1) { r[t] = 1; changed = true; }
     });
+    const key = `${r.Year}|${r.Country}|${r.City}`;
+    if (noFlyKeys.has(key) && !r.noFly) { r.noFly = true; changed = true; }
   });
   if (changed) saveTrips(TRIPS);
 })();
