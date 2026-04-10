@@ -99,7 +99,7 @@
   .tab.active { color: var(--ac-red); border-bottom-color: var(--ac-red); }
 
   /* ── MAIN CONTENT ── */
-  .main { max-width: 1240px; margin: 0 auto; padding: 2rem 2.5rem; }
+  .main { max-width: 1240px; margin: 0 auto; padding: 2rem 0.5rem; }
 
   /* ── FILTER PILLS ── */
   .filter-bar { display: flex; gap: 8px; margin-bottom: 2rem; flex-wrap: wrap; align-items: center; }
@@ -270,9 +270,30 @@
     background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
     transition: all 0.12s;
   }
-  .traveler-filter-btn.active {
-    background: var(--ac-red); border-color: var(--ac-red); color: var(--ac-white);
+  .traveler-filter-btn.active { background: var(--ac-red); border-color: var(--ac-red); color: var(--ac-white); }
+  .multi-check-wrap { position: relative; display: inline-block; width: 100%; }
+  .multi-check-btn {
+    font-family: 'Noto Sans', sans-serif; font-size: 11px; font-weight: 600;
+    padding: 4px 8px; width: 100%; text-align: left; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 3px;
+    background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+    white-space: nowrap;
   }
+  .multi-check-btn.has-selection { color: var(--ac-white); border-color: var(--ac-red); background: rgba(216,47,46,0.25); }
+  .multi-check-list {
+    display: none; position: absolute; top: 100%; left: 0; z-index: 200;
+    background: var(--ac-white); border: 1px solid var(--ac-rule);
+    border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    padding: 6px 0; min-width: 130px;
+  }
+  .multi-check-list.open { display: block; }
+  .multi-check-list label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px; font-size: 12px; color: var(--ac-charcoal);
+    cursor: pointer; white-space: nowrap;
+  }
+  .multi-check-list label:hover { background: var(--ac-bg); }
+  .multi-check-list input[type=checkbox] { accent-color: var(--ac-red); width: 13px; height: 13px; }
     font-family: 'Noto Sans', sans-serif;
     font-size: 11px;
     padding: 4px 7px;
@@ -315,10 +336,12 @@
   .cell-cb { accent-color: var(--ac-red); width: 14px; height: 14px; cursor: pointer; }
   tr.editing td { background: #fff8f8; }
 
-  .trip-table-wrap { background: var(--ac-white); border: 1px solid var(--ac-rule); border-radius: var(--radius-md); overflow: hidden; }
-  .trip-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .trip-table-wrap { background: var(--ac-white); border: 1px solid var(--ac-rule); border-radius: var(--radius-md); overflow-x: scroll; }
+  .trip-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
+  .trip-table th { white-space: nowrap; }
+  .trip-table td { white-space: nowrap; }
   .trip-table th {
-    padding: 10px 14px;
+    padding: 8px 10px;
     text-align: left;
     font-size: 10px;
     font-weight: 700;
@@ -328,7 +351,9 @@
     background: var(--ac-black);
     border-bottom: 3px solid var(--ac-red);
   }
-  .trip-table td { padding: 9px 14px; border-bottom: 1px solid var(--ac-rule); color: var(--ac-charcoal); vertical-align: middle; }
+  .trip-table th.col-year, .trip-table td.col-year { width: 34px; padding-left: 6px; padding-right: 2px; }
+  .trip-table th.col-mo,   .trip-table td.col-mo   { width: 28px; padding-left: 2px; padding-right: 2px; }
+  .trip-table td { padding: 7px 10px; border-bottom: 1px solid var(--ac-rule); color: var(--ac-charcoal); vertical-align: middle; }
   .trip-table tr:last-child td { border-bottom: none; }
   .trip-table tbody tr:hover td { background: var(--ac-bg); }
   .traveler-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 2px; margin: 1px; letter-spacing: 0.04em; text-transform: uppercase; }
@@ -405,7 +430,7 @@
     <div class="section-label">Trips &amp; Destinations</div>
     <div class="metric-grid" id="metricGrid1"><div class="metric-card"><div class="metric-label">Total trips</div><div class="metric-value">38</div><div class="metric-sub">Ryan</div></div><div class="metric-card"><div class="metric-label">Countries visited</div><div class="metric-value">21</div><div class="metric-sub">unique countries</div></div></div>
 
-    <div class="section-label" style="margin-top:1.75rem">Distance Flown — Round-trip from YUL</div>
+    <div class="section-label" style="margin-top:1.75rem">Distance Flown</div>
     <div class="metric-grid-3" id="metricGrid2"><div class="metric-card hi"><div class="metric-label">Total km flown (RT)</div><div class="metric-value">397,123 km</div><div class="metric-sub">round-trip from YUL</div></div><div class="metric-card"><div class="metric-label">Earth laps equivalent</div><div class="metric-value">9.9×</div><div class="metric-sub">× Earth circumference (40,075 km)</div></div></div>
 
     <div class="chart-card full" id="travelerSummaryCard" style="display:none;margin-bottom:16px;">
@@ -600,6 +625,16 @@
           <input type="number" id="fYear" placeholder="2026" min="1980" max="2099">
         </div>
         <div class="form-group">
+          <label>Month</label>
+          <select id="fMonth">
+            <option value="">—</option>
+            <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+            <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+            <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Leg of a trip?</label>
           <select id="fAdj"><option value="">No</option><option value="Yes">Yes</option></select>
         </div>
@@ -629,11 +664,20 @@
       <table class="trip-table">
         <thead>
           <tr>
-            <th>#</th><th>Year</th><th>Country</th><th>City</th><th>Continent</th><th>Travelers</th><th>Leg</th><th>~km RT</th><th></th>
+            <th>#</th><th class="col-year">Year</th><th class="col-mo">Mo.</th><th>Country</th><th>City</th><th>Continent</th><th>Travelers</th><th>Leg</th><th>~km RT</th><th></th>
           </tr>
           <tr style="background:var(--ac-charcoal)">
             <td></td>
             <td><input class="col-filter" id="flt-year" placeholder="Year" oninput="renderTripTable()"></td>
+            <td>
+              <select class="col-filter-sel" id="flt-month" onchange="renderTripTable()">
+                <option value="">All</option>
+                <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+                <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+                <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+                <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+              </select>
+            </td>
             <td><input class="col-filter" id="flt-country" placeholder="Country" oninput="renderTripTable()"></td>
             <td><input class="col-filter" id="flt-city" placeholder="City" oninput="renderTripTable()"></td>
             <td>
@@ -650,12 +694,15 @@
               </select>
             </td>
             <td>
-              <div id="flt-traveler-btns" style="display:flex;flex-wrap:wrap;gap:3px;">
-                <button class="traveler-filter-btn" data-t="Marc"     onclick="toggleTravelerFilter('Marc')"    >Marc</button>
-                <button class="traveler-filter-btn" data-t="Annie"    onclick="toggleTravelerFilter('Annie')"   >Annie</button>
-                <button class="traveler-filter-btn" data-t="Erika"    onclick="toggleTravelerFilter('Erika')"   >Erika</button>
-                <button class="traveler-filter-btn" data-t="Victoria" onclick="toggleTravelerFilter('Victoria')">Victoria</button>
-                <button class="traveler-filter-btn" data-t="Ryan"     onclick="toggleTravelerFilter('Ryan')"    >Ryan</button>
+              <div class="multi-check-wrap" id="travelerDropWrap">
+                <button class="multi-check-btn" onclick="toggleTravelerDrop(event)" id="travelerDropBtn">Travelers ▾</button>
+                <div class="multi-check-list" id="travelerDropList">
+                  <label><input type="checkbox" value="Marc"     onchange="handleTravelerCheck(this)"> Marc</label>
+                  <label><input type="checkbox" value="Annie"    onchange="handleTravelerCheck(this)"> Annie</label>
+                  <label><input type="checkbox" value="Erika"    onchange="handleTravelerCheck(this)"> Erika</label>
+                  <label><input type="checkbox" value="Victoria" onchange="handleTravelerCheck(this)"> Victoria</label>
+                  <label><input type="checkbox" value="Ryan"     onchange="handleTravelerCheck(this)"> Ryan</label>
+                </div>
               </div>
             </td>
             <td>
@@ -726,7 +773,8 @@ const SEED = [
     "Victoria": 0,
     "Ryan": 0,
     "Adj": "",
-    "noFly": true
+    "noFly": true,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -739,7 +787,8 @@ const SEED = [
     "Victoria": 0,
     "Ryan": 0,
     "Adj": "",
-    "noFly": true
+    "noFly": true,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -752,7 +801,8 @@ const SEED = [
     "Victoria": 0,
     "Ryan": 0,
     "Adj": "",
-    "noFly": true
+    "noFly": true,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -767,7 +817,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "noFly": true
+    "noFly": true,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -780,7 +831,8 @@ const SEED = [
     "Victoria": 0,
     "Ryan": 0,
     "Adj": "",
-    "noFly": true
+    "noFly": true,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -793,7 +845,8 @@ const SEED = [
     "Victoria": 0,
     "Ryan": 0,
     "Adj": "",
-    "noFly": true
+    "noFly": true,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -806,7 +859,8 @@ const SEED = [
     "Victoria": 0,
     "Ryan": 0,
     "Adj": "",
-    "noFly": true
+    "noFly": true,
+    "Month": null
   },
   {
     "Country": "Mexico",
@@ -818,7 +872,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -830,7 +885,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Dominicain Republic",
@@ -842,7 +898,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -854,7 +911,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "France",
@@ -866,7 +924,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Vatican",
@@ -880,7 +939,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Italy",
@@ -892,7 +952,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Monaco",
@@ -904,7 +965,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Fiji",
@@ -916,7 +978,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "France",
@@ -928,7 +991,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -940,7 +1004,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -952,7 +1017,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Cuba",
@@ -964,7 +1030,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -976,7 +1043,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -990,7 +1058,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "France",
@@ -1002,7 +1071,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1014,7 +1084,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1026,7 +1097,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1038,7 +1110,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Canada",
@@ -1050,7 +1123,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1062,7 +1136,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1076,7 +1151,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "France",
@@ -1090,7 +1166,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1104,7 +1181,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 1,
     "Victoria": 1,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1116,7 +1194,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1128,7 +1207,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Mexico",
@@ -1140,7 +1220,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 1,
     "Victoria": 1,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "UK",
@@ -1152,7 +1233,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "France",
@@ -1164,7 +1246,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "UK",
@@ -1176,7 +1259,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1188,7 +1272,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Australia",
@@ -1202,7 +1287,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Bahamas",
@@ -1216,7 +1302,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 1,
     "Victoria": 1,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "UK",
@@ -1228,7 +1315,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "UK",
@@ -1240,7 +1328,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1252,7 +1341,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1264,7 +1354,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -1276,7 +1367,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Switzerland",
@@ -1288,7 +1380,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1300,7 +1393,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1314,7 +1408,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "UK",
@@ -1326,7 +1421,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "UK",
@@ -1338,7 +1434,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1351,7 +1448,8 @@ const SEED = [
     "Victoria": 1,
     "Ryan": 1,
     "Adj": "",
-    "noFly": true
+    "noFly": true,
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -1363,7 +1461,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Greece",
@@ -1375,7 +1474,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Bermuda",
@@ -1389,7 +1489,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1401,7 +1502,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1413,7 +1515,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1425,7 +1528,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Japan",
@@ -1437,7 +1541,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Greece",
@@ -1449,7 +1554,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Switzerland",
@@ -1461,7 +1567,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Costa Rica",
@@ -1475,7 +1582,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 1,
     "Victoria": 1,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "UK",
@@ -1487,7 +1595,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Canada",
@@ -1499,7 +1608,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1511,7 +1621,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Italy",
@@ -1523,7 +1634,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Japan",
@@ -1535,7 +1647,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "UAE",
@@ -1547,7 +1660,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Australia",
@@ -1561,7 +1675,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Hong Kong",
@@ -1575,7 +1690,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Vatican",
@@ -1589,7 +1705,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 1,
     "Victoria": 1,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1603,7 +1720,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 1,
     "Victoria": 1,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -1615,7 +1733,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "South Korea",
@@ -1627,7 +1746,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Portugal",
@@ -1639,7 +1759,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Jamaica",
@@ -1651,7 +1772,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Netherlands",
@@ -1665,7 +1787,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1679,7 +1802,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1693,7 +1817,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 1,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Mexico",
@@ -1705,7 +1830,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1717,7 +1843,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Germany",
@@ -1729,7 +1856,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Switzerland",
@@ -1741,7 +1869,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Czechia",
@@ -1753,7 +1882,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1765,7 +1895,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1779,7 +1910,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Brazil",
@@ -1791,7 +1923,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Brazil",
@@ -1803,7 +1936,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1815,7 +1949,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Hong Kong",
@@ -1827,7 +1962,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Australia",
@@ -1839,7 +1975,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1851,7 +1988,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1865,7 +2003,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 1,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1877,7 +2016,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -1889,7 +2029,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Greece",
@@ -1901,7 +2042,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1913,7 +2055,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "China",
@@ -1925,7 +2068,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Bahamas",
@@ -1939,7 +2083,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Germany",
@@ -1951,7 +2096,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Netherlands",
@@ -1965,7 +2111,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 1,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "USA",
@@ -1979,7 +2126,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Canada",
@@ -1991,7 +2139,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "France",
@@ -2003,7 +2152,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Italy",
@@ -2015,7 +2165,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Canada",
@@ -2027,7 +2178,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Croatia",
@@ -2039,7 +2191,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Austria",
@@ -2051,7 +2204,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 0,
     "Ryan": 1,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Australia",
@@ -2063,7 +2217,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Qatar",
@@ -2075,7 +2230,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "UAE",
@@ -2089,7 +2245,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Dominicain Republic",
@@ -2101,7 +2258,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Germany",
@@ -2113,7 +2271,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Canada",
@@ -2125,7 +2284,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "France",
@@ -2137,7 +2297,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -2149,7 +2310,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -2161,7 +2323,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Belgium",
@@ -2173,7 +2336,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -2185,7 +2349,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Italy",
@@ -2199,7 +2364,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "Vatican",
@@ -2213,7 +2379,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "Canada",
@@ -2225,7 +2392,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "Canada",
@@ -2237,7 +2405,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   },
   {
     "Country": "France",
@@ -2249,7 +2418,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -2261,7 +2431,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Spain",
@@ -2273,7 +2444,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Singapore",
@@ -2285,7 +2457,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Italy",
@@ -2297,7 +2470,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Netherlands",
@@ -2309,7 +2483,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 1,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Switzerland",
@@ -2321,7 +2496,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Japan",
@@ -2335,7 +2511,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "Germany",
@@ -2347,7 +2524,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -2359,7 +2537,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Malta",
@@ -2371,7 +2550,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Italy",
@@ -2383,7 +2563,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Germany",
@@ -2395,7 +2576,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Jamaica",
@@ -2407,7 +2589,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Curacao",
@@ -2419,7 +2602,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Japan",
@@ -2431,7 +2615,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "France",
@@ -2443,7 +2628,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -2455,7 +2641,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Switzerland",
@@ -2467,7 +2654,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Belgium",
@@ -2479,7 +2667,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Netherlands",
@@ -2491,7 +2680,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Austria",
@@ -2503,7 +2693,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Slovakia",
@@ -2515,7 +2706,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Mexico",
@@ -2527,7 +2719,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Belgium",
@@ -2539,7 +2732,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Netherlands",
@@ -2551,7 +2745,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "UK",
@@ -2563,7 +2758,8 @@ const SEED = [
     "Annie": 0,
     "Erika": 1,
     "Victoria": 1,
-    "Ryan": 1
+    "Ryan": 1,
+    "Month": null
   },
   {
     "Country": "Barbados",
@@ -2575,7 +2771,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Denmark",
@@ -2587,7 +2784,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "Sweden",
@@ -2599,7 +2797,8 @@ const SEED = [
     "Erika": 1,
     "Victoria": 1,
     "Ryan": 0,
-    "Adj": "Yes"
+    "Adj": "Yes",
+    "Month": null
   },
   {
     "Country": "Bahamas",
@@ -2611,7 +2810,8 @@ const SEED = [
     "Erika": 0,
     "Victoria": 0,
     "Ryan": 1,
-    "Adj": ""
+    "Adj": "",
+    "Month": null
   },
   {
     "Country": "USA",
@@ -2625,7 +2825,8 @@ const SEED = [
     "Annie": 1,
     "Erika": 0,
     "Victoria": 0,
-    "Ryan": 0
+    "Ryan": 0,
+    "Month": null
   }
 ];
 
@@ -3123,7 +3324,11 @@ function drillYear(year) {
 
 // ─── Editor ──────────────────────────────────────────────────────
 function sortTrips() {
-  TRIPS.sort((a,b) => a.Year - b.Year);
+  TRIPS.sort((a,b) => {
+    if (a.Year !== b.Year) return a.Year - b.Year;
+    const am = a.Month || 13, bm = b.Month || 13;
+    return am - bm;
+  });
 }
 
 function addTrip() {
@@ -3131,6 +3336,7 @@ function addTrip() {
   const city = document.getElementById('fCity').value.trim();
   const continent = document.getElementById('fContinent').value;
   const year = parseInt(document.getElementById('fYear').value);
+  const month = parseInt(document.getElementById('fMonth').value) || null;
   const adj = document.getElementById('fAdj').value;
   const travelersChosen = TRAVELERS.filter(t=>document.getElementById('cb'+t).checked);
 
@@ -3139,7 +3345,7 @@ function addTrip() {
     msg.className='msg error'; msg.textContent='Please fill in country, city, continent, year, and at least one traveler.'; return;
   }
 
-  const row = {Country:country,City:city,Continent:continent,Year:year,Adj:adj};
+  const row = {Country:country,City:city,Continent:continent,Year:year,Month:month,Adj:adj};
   TRAVELERS.forEach(t=>{ row[t]=travelersChosen.includes(t)?1:0; });
   TRIPS.push(row);
   sortTrips();
@@ -3151,6 +3357,7 @@ function addTrip() {
   ['fCountry','fCity'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fContinent').value='';
   document.getElementById('fYear').value='';
+  document.getElementById('fMonth').value='';
   document.getElementById('fAdj').value='';
   TRAVELERS.forEach(t=>document.getElementById('cb'+t).checked=false);
   msg.className='msg success'; msg.textContent=`Trip to ${city}, ${country} (${year}) added successfully.`;
@@ -3174,10 +3381,14 @@ function editTrip(idx) {
 
   const contOpts = ['Europe','North America','Asia','Carribean','Oceania','Central America','South America','Africa']
     .map(c=>`<option value="${c}"${c===r.Continent?' selected':''}>${c}</option>`).join('');
+  const MONTH_NAMES = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthOpts = [['','—'],...MONTH_NAMES.slice(1).map((n,i)=>[i+1,n])]
+    .map(([v,n])=>`<option value="${v}"${r.Month==v?' selected':''}>${n}</option>`).join('');
 
   row.innerHTML = `
     <td style="font-size:11px;color:var(--ac-light)">${idx+1}</td>
     <td><input class="cell-input narrow" id="eYear_${idx}" type="number" value="${r.Year}" min="1980" max="2099"></td>
+    <td><select class="cell-input" id="eMonth_${idx}" style="max-width:65px">${monthOpts}</select></td>
     <td><input class="cell-input" id="eCountry_${idx}" type="text" value="${r.Country}"></td>
     <td><input class="cell-input" id="eCity_${idx}" type="text" value="${r.City}"></td>
     <td><select class="cell-input" id="eContinent_${idx}">${contOpts}</select></td>
@@ -3192,13 +3403,14 @@ function editTrip(idx) {
 
 function saveTrip(idx) {
   const year = parseInt(document.getElementById(`eYear_${idx}`).value);
+  const month = parseInt(document.getElementById(`eMonth_${idx}`).value) || null;
   const country = document.getElementById(`eCountry_${idx}`).value.trim();
   const city = document.getElementById(`eCity_${idx}`).value.trim();
   const continent = document.getElementById(`eContinent_${idx}`).value;
   const adj = document.getElementById(`eAdj_${idx}`).value;
   if (!country||!city||!continent||!year) { alert('Country, city, continent and year are required.'); return; }
 
-  TRIPS[idx] = { ...TRIPS[idx], Year:year, Country:country, City:city, Continent:continent, Adj:adj };
+  TRIPS[idx] = { ...TRIPS[idx], Year:year, Month:month, Country:country, City:city, Continent:continent, Adj:adj };
   TRAVELERS.forEach(t=>{ TRIPS[idx][t] = document.getElementById(`eCb${t}_${idx}`).checked ? 1 : 0; });
 
   sortTrips();
@@ -3210,26 +3422,38 @@ function saveTrip(idx) {
 
 let activeTravelerFilters = new Set();
 
-function toggleTravelerFilter(t) {
-  if (activeTravelerFilters.has(t)) activeTravelerFilters.delete(t);
-  else activeTravelerFilters.add(t);
-  document.querySelectorAll('.traveler-filter-btn').forEach(b => {
-    b.classList.toggle('active', activeTravelerFilters.has(b.dataset.t));
-  });
+function toggleTravelerDrop(e) {
+  e.stopPropagation();
+  document.getElementById('travelerDropList').classList.toggle('open');
+}
+function handleTravelerCheck(cb) {
+  if (cb.checked) activeTravelerFilters.add(cb.value);
+  else activeTravelerFilters.delete(cb.value);
+  const btn = document.getElementById('travelerDropBtn');
+  const sel = [...activeTravelerFilters];
+  btn.textContent = sel.length ? sel.join(', ') + ' ▾' : 'Travelers ▾';
+  btn.classList.toggle('has-selection', sel.length > 0);
   renderTripTable();
 }
+document.addEventListener('click', () => {
+  document.getElementById('travelerDropList')?.classList.remove('open');
+});
 
 function clearFilters() {
-  ['flt-year','flt-country','flt-city'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['flt-year','flt-month','flt-country','flt-city'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   ['flt-continent','flt-adj'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   activeTravelerFilters.clear();
-  document.querySelectorAll('.traveler-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#travelerDropList input[type=checkbox]').forEach(cb => cb.checked = false);
+  const btn = document.getElementById('travelerDropBtn');
+  if (btn) { btn.textContent = 'Travelers ▾'; btn.classList.remove('has-selection'); }
   renderTripTable();
 }
 
 function renderTripTable() {
   sortTrips();
+  const MONTH_NAMES = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const fYear    = (document.getElementById('flt-year')?.value || '').trim().toLowerCase();
+  const fMonth   = document.getElementById('flt-month')?.value || '';
   const fCountry = (document.getElementById('flt-country')?.value || '').trim().toLowerCase();
   const fCity    = (document.getElementById('flt-city')?.value || '').trim().toLowerCase();
   const fCont    = document.getElementById('flt-continent')?.value || '';
@@ -3237,16 +3461,14 @@ function renderTripTable() {
 
   const filtered = TRIPS.map((r,i)=>({...r,_i:i})).filter(r => {
     if (fYear    && !String(r.Year).includes(fYear))               return false;
+    if (fMonth   && String(r.Month) !== fMonth)                    return false;
     if (fCountry && !r.Country.toLowerCase().includes(fCountry))   return false;
     if (fCity    && !r.City.toLowerCase().includes(fCity))         return false;
     if (fCont    && r.Continent !== fCont)                         return false;
     if (fAdj === 'adj' && !r.Adj)                                  return false;
     if (fAdj === 'no'  &&  r.Adj)                                  return false;
-    // Multi-traveler: row must include ALL selected travelers
     if (activeTravelerFilters.size > 0) {
-      for (const t of activeTravelerFilters) {
-        if (!(r[t] > 0)) return false;
-      }
+      for (const t of activeTravelerFilters) { if (!(r[t] > 0)) return false; }
     }
     return true;
   });
@@ -3256,7 +3478,8 @@ function renderTripTable() {
   document.getElementById('tripTableBody').innerHTML = filtered.map(r=>`
     <tr data-idx="${r._i}">
       <td style="color:var(--ac-light);font-size:11px">${r._i+1}</td>
-      <td style="font-family:monospace;font-size:12px">${r.Year}</td>
+      <td class="col-year" style="font-family:monospace;font-size:12px">${r.Year}</td>
+      <td class="col-mo" style="font-family:monospace;font-size:11px;color:var(--ac-mid)">${r.Month ? MONTH_NAMES[r.Month] : ''}</td>
       <td>${r.Country}</td>
       <td style="color:var(--ac-mid)">${r.City}</td>
       <td style="color:var(--ac-mid)">${r.Continent}</td>
