@@ -2838,14 +2838,44 @@ const COUPLE_COLOR='#D82F2E';
 const CONT_COLORS=['#D82F2E','#1C1C1C','#3D3D3D','#6B6B6B','#A8A8A8','#C8C8C8','#b02323'];
 
 // ─── Storage ─────────────────────────────────────────────────────
-// Always start from SEED — localStorage is only used during the current session
-// for edits made in the browser. Exported HTML bakes edits into SEED directly.
 function loadTrips() {
-  return JSON.parse(JSON.stringify(SEED));
+  try {
+    const s = localStorage.getItem('tj_trips');
+    const stored = s ? JSON.parse(s) : null;
+    const fresh = JSON.parse(JSON.stringify(SEED));
+
+    if (!stored || stored.length === 0) {
+      // No localStorage — use SEED directly
+      localStorage.setItem('tj_trips', JSON.stringify(fresh));
+      return fresh;
+    }
+
+    // Merge: for each stored trip, pull Month and noFly from SEED if missing
+    // Match by Year + Country + City
+    const seedMap = {};
+    fresh.forEach(r => {
+      const key = `${r.Year}|${r.Country}|${r.City}`;
+      seedMap[key] = r;
+    });
+
+    let changed = false;
+    stored.forEach(r => {
+      const key = `${r.Year}|${r.Country}|${r.City}`;
+      const seedRow = seedMap[key];
+      if (seedRow) {
+        if (!r.Month && seedRow.Month) { r.Month = seedRow.Month; changed = true; }
+        if (!r.noFly && seedRow.noFly) { r.noFly = seedRow.noFly; changed = true; }
+      }
+    });
+
+    if (changed) localStorage.setItem('tj_trips', JSON.stringify(stored));
+    return stored;
+  } catch(e) {
+    return JSON.parse(JSON.stringify(SEED));
+  }
 }
 function saveTrips(trips) {
-  // No-op: we no longer persist to localStorage.
-  // All changes are saved via Export HTML which bakes them into the SEED.
+  localStorage.setItem('tj_trips', JSON.stringify(trips));
 }
 function roundKm(km) {
   return Math.round(km / 5000) * 5000;
