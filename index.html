@@ -3033,15 +3033,20 @@ function renderDashboard() {
   const currentYear = new Date().getFullYear();
   const years = Object.keys(STATS.yearly).map(Number).sort((a,b)=>a-b);
 
+  // Start years per view — chart lines begin from when each traveler first joined
+  const START_YEARS = {family:2003, couple:1999, Marc:1999, Annie:1999, Erika:2003, Victoria:2007, Ryan:2009};
+  const chartStartYear = START_YEARS[isFamily?'family':isCouple?'couple':currentFilter] || 1988;
+
   // Year chart
   document.getElementById('legYear').innerHTML = (isFamily||isCouple)?
     `<span class="leg-item"><span class="leg-dot" style="background:${COUPLE_COLOR}"></span>${isFamily?'Family':'Marc & Annie'}</span>` :
     ts.map(t=>`<span class="leg-item"><span class="leg-dot" style="background:${COLORS[t]}"></span>${t}</span>`).join('');
+  const chartYears = years.filter(y => y >= chartStartYear);
   mkChart('yearChart','line',{
-    labels:years,
-    datasets: isFamily ? [{label:'Family',data:years.map(y=>STATS.familyYearly[y]||0),borderColor:COUPLE_COLOR,backgroundColor:COUPLE_COLOR+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}]
-      : isCouple ? [{label:'Marc & Annie',data:years.map(y=>STATS.coupleYearly[y]||0),borderColor:COUPLE_COLOR,backgroundColor:COUPLE_COLOR+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}]
-      : ts.map(t=>({label:t,data:years.map(y=>STATS.yearly[y]?.[t]||0),borderColor:COLORS[t],backgroundColor:COLORS[t]+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}))
+    labels:chartYears,
+    datasets: isFamily ? [{label:'Family',data:chartYears.map(y=>STATS.familyYearly[y]||0),borderColor:COUPLE_COLOR,backgroundColor:COUPLE_COLOR+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}]
+      : isCouple ? [{label:'Marc & Annie',data:chartYears.map(y=>STATS.coupleYearly[y]||0),borderColor:COUPLE_COLOR,backgroundColor:COUPLE_COLOR+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}]
+      : ts.map(t=>({label:t,data:chartYears.map(y=>STATS.yearly[y]?.[t]||0),borderColor:COLORS[t],backgroundColor:COLORS[t]+'22',borderWidth:1.5,fill:false,tension:0.3,pointRadius:2}))
   },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{color:'rgba(128,128,128,0.08)'}},y:{ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.08)'}}}});
 
   // KM chart
@@ -3049,10 +3054,10 @@ function renderDashboard() {
     `<span class="leg-item"><span class="leg-dot" style="background:${COUPLE_COLOR}"></span>${isFamily?'Family':'Marc & Annie'}</span>` :
     ts.map(t=>`<span class="leg-item"><span class="leg-dot" style="background:${COLORS[t]}"></span>${t}</span>`).join('');
   mkChart('kmChart','bar',{
-    labels:years,
-    datasets: isFamily ? [{label:'Family',data:years.map(y=>STATS.familyYearlyKm[y]||0),backgroundColor:COUPLE_COLOR+'bb',borderWidth:0}]
-      : isCouple ? [{label:'Marc & Annie',data:years.map(y=>STATS.coupleYearlyKm[y]||0),backgroundColor:COUPLE_COLOR+'bb',borderWidth:0}]
-      : ts.map(t=>({label:t,data:years.map(y=>STATS.yearlyKm[y]?.[t]||0),backgroundColor:COLORS[t]+'bb',borderWidth:0}))
+    labels:chartYears,
+    datasets: isFamily ? [{label:'Family',data:chartYears.map(y=>STATS.familyYearlyKm[y]||0),backgroundColor:COUPLE_COLOR+'bb',borderWidth:0}]
+      : isCouple ? [{label:'Marc & Annie',data:chartYears.map(y=>STATS.coupleYearlyKm[y]||0),backgroundColor:COUPLE_COLOR+'bb',borderWidth:0}]
+      : ts.map(t=>({label:t,data:chartYears.map(y=>STATS.yearlyKm[y]?.[t]||0),backgroundColor:COLORS[t]+'bb',borderWidth:0}))
   },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${Math.round(c.raw).toLocaleString()} km`}}},scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:18},grid:{display:false}},y:{ticks:{font:{size:10},callback:v=>v>=1000?Math.round(v/1000)+'K':v},grid:{color:'rgba(128,128,128,0.08)'}}}});
 
   // Continent bars — unique countries visited (union across selected travelers, incl legs)
@@ -3119,7 +3124,7 @@ function renderDashboard() {
 
   // Traveler summary table — family view only
   const showSummary = isFamily;
-  const showTogether = isFamily || isCouple || currentFilter === 'Marc' || currentFilter === 'Annie';
+  const showTogether = isCouple || currentFilter === 'Marc' || currentFilter === 'Annie';
   document.getElementById('travelerSummaryCard').style.display = showSummary ? 'block' : 'none';
   document.getElementById('togetherChartCard').style.display   = showTogether ? 'block' : 'none';
 
@@ -3501,6 +3506,7 @@ function switchTab(tab) {
     (i===0&&tab==='dashboard')||(i===1&&tab==='editor')));
   if (tab==='editor') renderTripTable();
 }
+;
 
 // ─── Export ───────────────────────────────────────────────────────
 function exportHTML() {
