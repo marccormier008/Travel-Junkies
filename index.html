@@ -2838,14 +2838,25 @@ const COUPLE_COLOR='#D82F2E';
 const CONT_COLORS=['#D82F2E','#1C1C1C','#3D3D3D','#6B6B6B','#A8A8A8','#C8C8C8','#b02323'];
 
 // ─── Storage ─────────────────────────────────────────────────────
+const SEED_VERSION = SEED.length + '|' + (SEED.filter(r=>r.Month).length) + '|' + (SEED.filter(r=>r.noFly).length);
+
 function loadTrips() {
   try {
+    const storedVersion = localStorage.getItem('tj_seed_version');
     const s = localStorage.getItem('tj_trips');
-    return s ? JSON.parse(s) : JSON.parse(JSON.stringify(SEED));
+    // If SEED has changed (more rows, more months, or more noFly flags), reload from SEED
+    if (!s || storedVersion !== SEED_VERSION) {
+      const fresh = JSON.parse(JSON.stringify(SEED));
+      localStorage.setItem('tj_trips', JSON.stringify(fresh));
+      localStorage.setItem('tj_seed_version', SEED_VERSION);
+      return fresh;
+    }
+    return JSON.parse(s);
   } catch(e) { return JSON.parse(JSON.stringify(SEED)); }
 }
 function saveTrips(trips) {
   localStorage.setItem('tj_trips', JSON.stringify(trips));
+  localStorage.setItem('tj_seed_version', SEED_VERSION);
 }
 function roundKm(km) {
   return Math.round(km / 5000) * 5000;
