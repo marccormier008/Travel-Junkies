@@ -3,6 +3,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Travel Junkies — Flight Log</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
 <style>
@@ -410,6 +412,8 @@
 <div class="tab-nav">
   <button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
   <button class="tab" onclick="switchTab('editor')">Flight Log</button>
+  <button class="tab" onclick="switchTab('map')">🗺 Map</button>
+  <button class="tab" onclick="switchTab('ac')">✈ AC Destinations</button>
 </div>
 
 <div class="main">
@@ -727,6 +731,7 @@ const AIRPORT_COORDS = {
   'Osaka, Kyoto':[34.7855,135.438],'Doha':[25.2608,51.5655],'Singapore':[1.3644,103.9915],
   'Seoul':[37.4602,126.4407],'Dubai':[25.2528,55.3644],'Atlantis':[25.0882,-77.3368],
   'Nassau':[25.0382,-77.4661],'Bridgetown':[13.0745,-59.4925],'Bermuda':[32.364,-64.6788],
+  'Guadeloupe':[16.2653,-61.5318],'Sainte-Anne':[16.2653,-61.5318],'Pointe-a-Pitre':[16.2653,-61.5318],
   'Varadero':[23.0344,-81.4353],'Curacao':[12.1889,-68.9598],'Playa Dorada':[19.7578,-70.5001],
   'Punta Cana':[18.5674,-68.3634],'Montego Bay':[18.5037,-77.9133],'Negril':[18.4,-78.35],
   "Quepos, Manuel Antonio":[9.4432,-84.1316],'Salzburg':[47.7933,13.0043],'Vienna':[48.1103,16.5697],
@@ -3523,9 +3528,13 @@ function renderTripTable() {
 function switchTab(tab) {
   document.getElementById('dashPanel').style.display   = tab==='dashboard'?'block':'none';
   document.getElementById('editorPanel').style.display = tab==='editor'?'block':'none';
+  document.getElementById('mapPanel').style.display    = tab==='map'?'block':'none';
+  document.getElementById('acPanel').style.display     = tab==='ac'?'block':'none';
   document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',
-    (i===0&&tab==='dashboard')||(i===1&&tab==='editor')));
+    (i===0&&tab==='dashboard')||(i===1&&tab==='editor')||(i===2&&tab==='map')||(i===3&&tab==='ac')));
   if (tab==='editor') renderTripTable();
+  if (tab==='map') initMap();
+  if (tab==='ac') renderAC();
 }
 ;
 
@@ -3542,10 +3551,374 @@ function exportHTML() {
   a.click();
 }
 
+// ─── AC Destinations ────────────────────────────────────────────
+const AC_DESTINATIONS = [
+  // Europe
+  {region:'Europe', country:'Austria',         city:'Vienna',          seasonal:false},
+  {region:'Europe', country:'Belgium',         city:'Brussels',        seasonal:false},
+  {region:'Europe', country:'Czech Republic',  city:'Prague',          seasonal:true},
+  {region:'Europe', country:'Denmark',         city:'Copenhagen',      seasonal:false},
+  {region:'Europe', country:'France',          city:'Lyon',            seasonal:false},
+  {region:'Europe', country:'France',          city:'Nice',            seasonal:true},
+  {region:'Europe', country:'France',          city:'Paris',           seasonal:false},
+  {region:'Europe', country:'France',          city:'Toulouse',        seasonal:false},
+  {region:'Europe', country:'Germany',         city:'Frankfurt',       seasonal:false},
+  {region:'Europe', country:'Germany',         city:'Munich',          seasonal:false},
+  {region:'Europe', country:'Greece',          city:'Athens',          seasonal:true},
+  {region:'Europe', country:'Hungary',         city:'Budapest',        seasonal:false},
+  {region:'Europe', country:'Iceland',         city:'Reykjavik',       seasonal:true},
+  {region:'Europe', country:'Ireland',         city:'Dublin',          seasonal:false},
+  {region:'Europe', country:'Israel',          city:'Tel Aviv',        seasonal:false},
+  {region:'Europe', country:'Italy',           city:'Milan',           seasonal:false},
+  {region:'Europe', country:'Italy',           city:'Rome',            seasonal:false},
+  {region:'Europe', country:'Italy',           city:'Venice',          seasonal:true},
+  {region:'Europe', country:'Morocco',         city:'Casablanca',      seasonal:false},
+  {region:'Europe', country:'Netherlands',     city:'Amsterdam',       seasonal:false},
+  {region:'Europe', country:'Portugal',        city:'Lisbon',          seasonal:false},
+  {region:'Europe', country:'Spain',           city:'Barcelona',       seasonal:false},
+  {region:'Europe', country:'Spain',           city:'Madrid',          seasonal:false},
+  {region:'Europe', country:'Spain',           city:'Malaga',          seasonal:true},
+  {region:'Europe', country:'Spain',           city:'Palma',           seasonal:true},
+  {region:'Europe', country:'Sweden',          city:'Stockholm',       seasonal:false},
+  {region:'Europe', country:'Switzerland',     city:'Geneva',          seasonal:false},
+  {region:'Europe', country:'Switzerland',     city:'Zurich',          seasonal:false},
+  {region:'Europe', country:'UK',              city:'Edinburgh',       seasonal:true},
+  {region:'Europe', country:'UK',              city:'London',          seasonal:false},
+  {region:'Europe', country:'UK',              city:'Manchester',      seasonal:false},
+  // Asia & Pacific
+  {region:'Asia & Pacific', country:'Australia',   city:'Brisbane',    seasonal:false},
+  {region:'Asia & Pacific', country:'Australia',   city:'Sydney',      seasonal:false},
+  {region:'Asia & Pacific', country:'China',       city:'Beijing',     seasonal:false},
+  {region:'Asia & Pacific', country:'China',       city:'Shanghai',    seasonal:false},
+  {region:'Asia & Pacific', country:'Hong Kong',   city:'Hong Kong',   seasonal:false},
+  {region:'Asia & Pacific', country:'India',       city:'Delhi',       seasonal:false},
+  {region:'Asia & Pacific', country:'India',       city:'Mumbai',      seasonal:true},
+  {region:'Asia & Pacific', country:'Japan',       city:'Osaka',       seasonal:false},
+  {region:'Asia & Pacific', country:'Japan',       city:'Tokyo',       seasonal:false},
+  {region:'Asia & Pacific', country:'New Zealand', city:'Auckland',    seasonal:true},
+  {region:'Asia & Pacific', country:'Philippines', city:'Manila',      seasonal:false},
+  {region:'Asia & Pacific', country:'Singapore',   city:'Singapore',   seasonal:false},
+  {region:'Asia & Pacific', country:'South Korea', city:'Seoul',       seasonal:false},
+  // Middle East & Africa
+  {region:'Middle East & Africa', country:'Qatar',    city:'Doha',       seasonal:false},
+  {region:'Middle East & Africa', country:'Algeria',  city:'Algiers',    seasonal:true},
+  {region:'Middle East & Africa', country:'Nigeria',  city:'Lagos',      seasonal:false},
+  {region:'Middle East & Africa', country:'Senegal',  city:'Dakar',      seasonal:false},
+  // Caribbean & Atlantic
+  {region:'Caribbean & Atlantic', country:'Bahamas',          city:'Nassau',          seasonal:false},
+  {region:'Caribbean & Atlantic', country:'Barbados',         city:'Bridgetown',      seasonal:false},
+  {region:'Caribbean & Atlantic', country:'Bermuda',          city:'Hamilton',        seasonal:false},
+  {region:'Caribbean & Atlantic', country:'Cuba',             city:'Varadero',        seasonal:false},
+  {region:'Caribbean & Atlantic', country:'Dominican Republic',city:'Punta Cana',     seasonal:false},
+  {region:'Caribbean & Atlantic', country:'France',           city:'Fort-de-France',  seasonal:false},
+  {region:'Caribbean & Atlantic', country:'France',           city:'Pointe-a-Pitre',  seasonal:false},
+  {region:'Caribbean & Atlantic', country:'Grenada',          city:'St. George\'s',   seasonal:false},
+  {region:'Caribbean & Atlantic', country:'Jamaica',          city:'Montego Bay',     seasonal:false},
+  {region:'Caribbean & Atlantic', country:'St. Lucia',        city:'Castries',        seasonal:false},
+  {region:'Caribbean & Atlantic', country:'Trinidad',         city:'Port of Spain',   seasonal:false},
+  // Latin America
+  {region:'Latin America', country:'Argentina',   city:'Buenos Aires',   seasonal:false},
+  {region:'Latin America', country:'Brazil',      city:'Rio de Janeiro',  seasonal:false},
+  {region:'Latin America', country:'Brazil',      city:'Sao Paulo',       seasonal:false},
+  {region:'Latin America', country:'Chile',       city:'Santiago',        seasonal:true},
+  {region:'Latin America', country:'Colombia',    city:'Bogota',          seasonal:false},
+  {region:'Latin America', country:'Colombia',    city:'Cartagena',       seasonal:false},
+  {region:'Latin America', country:'Costa Rica',  city:'San Jose',        seasonal:false},
+  {region:'Latin America', country:'Guatemala',   city:'Guatemala City',  seasonal:true},
+  {region:'Latin America', country:'Mexico',      city:'Cancun',          seasonal:false},
+  {region:'Latin America', country:'Mexico',      city:'Los Cabos',       seasonal:true},
+  {region:'Latin America', country:'Mexico',      city:'Mexico City',     seasonal:false},
+  {region:'Latin America', country:'Mexico',      city:'Puerto Vallarta',  seasonal:false},
+  {region:'Latin America', country:'Panama',      city:'Panama City',     seasonal:false},
+  {region:'Latin America', country:'Peru',        city:'Lima',            seasonal:false},
+  // USA
+  {region:'USA', country:'USA', city:'Atlanta',       seasonal:false},
+  {region:'USA', country:'USA', city:'Boston',         seasonal:false},
+  {region:'USA', country:'USA', city:'Chicago',        seasonal:false},
+  {region:'USA', country:'USA', city:'Dallas',         seasonal:false},
+  {region:'USA', country:'USA', city:'Denver',         seasonal:false},
+  {region:'USA', country:'USA', city:'Houston',        seasonal:false},
+  {region:'USA', country:'USA', city:'Las Vegas',      seasonal:false},
+  {region:'USA', country:'USA', city:'Los Angeles',    seasonal:false},
+  {region:'USA', country:'USA', city:'Miami',          seasonal:false},
+  {region:'USA', country:'USA', city:'New York',       seasonal:false},
+  {region:'USA', country:'USA', city:'Orlando',        seasonal:false},
+  {region:'USA', country:'USA', city:'San Francisco',  seasonal:false},
+  {region:'USA', country:'USA', city:'Seattle',        seasonal:false},
+  {region:'USA', country:'USA', city:'Washington',     seasonal:false},
+];
+
+let acFilter = 'all';
+let acInited = false;
+
+function renderAC() {
+  if (acInited) return;
+  acInited = true;
+
+  // Build visited set from TRIPS (any traveler)
+  const visitedCities = new Set();
+  const visitedCountries = new Set();
+  TRIPS.forEach(r => {
+    visitedCountries.add(r.Country.toLowerCase());
+    // Match by city (first part before comma)
+    const firstCity = r.City.split(',')[0].trim().toLowerCase();
+    visitedCities.add(firstCity);
+    visitedCities.add(r.City.toLowerCase());
+    visitedCities.add(r.Country.toLowerCase()); // country-level fallback
+  });
+
+  function isVisited(dest) {
+    const city = dest.city.toLowerCase();
+    const country = dest.country.toLowerCase();
+    return visitedCities.has(city) || visitedCities.has(country+':'+city) ||
+           (dest.country !== 'USA' && dest.country !== 'France' && dest.country !== 'Canada' && visitedCountries.has(country));
+  }
+
+  // Regions
+  const regions = [...new Set(AC_DESTINATIONS.map(d=>d.region))];
+  const total = AC_DESTINATIONS.length;
+  const visited = AC_DESTINATIONS.filter(isVisited).length;
+  const pct = Math.round(visited/total*100);
+
+  const container = document.getElementById('acPanel');
+  container.innerHTML = `
+    <div style="background:var(--ac-white);border:1px solid var(--ac-rule);border-radius:var(--radius-md);overflow:hidden;margin-bottom:1rem;">
+      <div style="background:var(--ac-black);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.5);margin-bottom:4px;">Air Canada International Destinations</div>
+          <div style="font-size:22px;font-weight:700;color:var(--ac-white)">${visited} <span style="font-size:14px;font-weight:400;color:rgba(255,255,255,0.5)">of ${total} destinations visited</span></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:36px;font-weight:700;color:var(--ac-red)">${pct}%</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4)">completion</div>
+        </div>
+      </div>
+      <div style="padding:12px 20px;background:var(--ac-charcoal);">
+        <div style="background:rgba(255,255,255,0.1);border-radius:4px;height:8px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:var(--ac-red);border-radius:4px;transition:width 0.5s;"></div>
+        </div>
+      </div>
+      <div style="padding:12px 20px;border-bottom:1px solid var(--ac-rule);display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:11px;color:var(--ac-mid);margin-right:4px;">Show:</span>
+        <button class="ac-filter-btn active" data-f="all" onclick="filterAC('all')">All</button>
+        <button class="ac-filter-btn" data-f="visited" onclick="filterAC('visited')">✓ Visited</button>
+        <button class="ac-filter-btn" data-f="unvisited" onclick="filterAC('unvisited')">○ Not yet</button>
+        <button class="ac-filter-btn" data-f="seasonal" onclick="filterAC('seasonal')">◑ Seasonal</button>
+      </div>
+    </div>
+
+    <div id="acRegions">
+      ${regions.map(region => {
+        const dests = AC_DESTINATIONS.filter(d=>d.region===region);
+        const vCount = dests.filter(isVisited).length;
+        const rPct = Math.round(vCount/dests.length*100);
+        return `<div class="ac-region-card" data-region="${region}">
+          <div style="background:var(--ac-black);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius-sm) var(--radius-sm) 0 0;">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-white)">${region}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.5)">${vCount}/${dests.length} &nbsp; <span style="color:var(--ac-red);font-weight:700">${rPct}%</span></span>
+          </div>
+          <div style="background:var(--ac-charcoal);height:4px;">
+            <div style="width:${rPct}%;height:100%;background:var(--ac-red);"></div>
+          </div>
+          <div style="background:var(--ac-white);border:1px solid var(--ac-rule);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;" class="ac-dest-list">
+            ${dests.map(d => {
+              const v = isVisited(d);
+              return `<span class="ac-dest-chip ${v?'ac-visited':'ac-unvisited'} ${d.seasonal?'ac-seasonal':''}" 
+                data-visited="${v}" data-seasonal="${d.seasonal}">
+                ${v ? '✓' : '○'} ${d.city}${d.seasonal?' <span style="font-size:9px;opacity:0.7">(s)</span>':''}
+              </span>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('<div style="margin-bottom:12px;"></div>')}
+    </div>
+  `;
+}
+
+function filterAC(f) {
+  acFilter = f;
+  document.querySelectorAll('.ac-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
+  document.querySelectorAll('.ac-dest-chip').forEach(chip => {
+    const visited = chip.dataset.visited === 'true';
+    const seasonal = chip.dataset.seasonal === 'true';
+    let show = true;
+    if (f==='visited')   show = visited;
+    if (f==='unvisited') show = !visited;
+    if (f==='seasonal')  show = seasonal;
+    chip.style.display = show ? '' : 'none';
+  });
+}
+
 // ─── Init ────────────────────────────────────────────────────────
 sortTrips();
 renderDashboard();
 </script>
 
+<!-- ── MAP PANEL ── -->
+  <div id="mapPanel" style="display:none;">
+    <div style="background:var(--ac-white);border:1px solid var(--ac-rule);border-radius:var(--radius-md);overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--ac-rule);flex-wrap:wrap;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--ac-charcoal);">Travel Map</div>
+        <div style="display:flex;gap:6px;margin-left:8px;flex-wrap:wrap;" id="mapFilterBtns">
+          <button class="map-filter-btn active" data-f="all" onclick="setMapFilter('all')">All</button>
+          <button class="map-filter-btn" data-f="Marc" onclick="setMapFilter('Marc')">Marc</button>
+          <button class="map-filter-btn" data-f="Annie" onclick="setMapFilter('Annie')">Annie</button>
+          <button class="map-filter-btn" data-f="Erika" onclick="setMapFilter('Erika')">Erika</button>
+          <button class="map-filter-btn" data-f="Victoria" onclick="setMapFilter('Victoria')">Victoria</button>
+          <button class="map-filter-btn" data-f="Ryan" onclick="setMapFilter('Ryan')">Ryan</button>
+        </div>
+        <div style="margin-left:auto;font-size:11px;color:var(--ac-light)" id="mapCount"></div>
+      </div>
+      <div id="leafletMap" style="height:600px;width:100%;"></div>
+    </div>
+  </div>
+
+<!-- ── AC DESTINATIONS PANEL ── -->
+  <div id="acPanel" style="display:none;">
+  </div>
+
+</div><!-- end .main -->
+
+<style>
+  .ac-filter-btn {
+    font-family: 'Noto Sans', sans-serif; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 10px;
+    border-radius: 2px; cursor: pointer; border: 1.5px solid var(--ac-rule);
+    background: var(--ac-white); color: var(--ac-mid); transition: all 0.12s;
+  }
+  .ac-filter-btn:hover { border-color: var(--ac-charcoal); color: var(--ac-black); }
+  .ac-filter-btn.active { background: var(--ac-red); border-color: var(--ac-red); color: var(--ac-white); }
+  .ac-dest-chip {
+    display: inline-block; font-size: 11px; padding: 4px 10px; border-radius: 3px;
+    cursor: default; font-family: 'Noto Sans', sans-serif; white-space: nowrap;
+  }
+  .ac-visited   { background: #e6f4ee; color: #0a5c30; border: 1px solid #b3ddc4; }
+  .ac-unvisited { background: var(--ac-bg); color: var(--ac-mid); border: 1px solid var(--ac-rule); }
+  .ac-seasonal.ac-unvisited { border-style: dashed; }
+  .ac-region-card { margin-bottom: 12px; }
+  .map-filter-btn {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 4px 10px; border-radius: 2px; cursor: pointer;
+    border: 1.5px solid var(--ac-rule);
+    background: var(--ac-white); color: var(--ac-mid);
+    transition: all 0.12s;
+  }
+  .map-filter-btn:hover { border-color: var(--ac-charcoal); color: var(--ac-black); }
+  .map-filter-btn.active { background: var(--ac-red); border-color: var(--ac-red); color: var(--ac-white); }
+  .map-popup { font-family: 'Noto Sans', sans-serif; font-size: 12px; min-width: 160px; }
+  .map-popup .mp-country { font-weight: 700; font-size: 13px; color: #1C1C1C; margin-bottom: 4px; }
+  .map-popup .mp-trip { padding: 4px 0; border-bottom: 1px solid #eee; font-size: 11px; color: #3D3D3D; }
+  .map-popup .mp-trip:last-child { border-bottom: none; }
+  .map-popup .mp-travelers { margin-top: 3px; }
+  .map-popup .mp-tag { display:inline-block; font-size:9px; font-weight:700; text-transform:uppercase; padding:1px 5px; border-radius:2px; margin-right:2px; }
+</style>
+
+<script>
+// ─── Map ─────────────────────────────────────────────────────────
+let mapInited = false, leafletMap = null, mapMarkers = [];
+let mapFilter = 'all';
+const MONTHS_M = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const TAG_COLORS = {Marc:'#e8f1fb|#1a3a6b',Annie:'#f0f0f0|#1C1C1C',Erika:'#f0f0f0|#6B6B6B',Victoria:'#f0f0f0|#A8A8A8',Ryan:'#f0f0f0|#3D3D3D'};
+
+function setMapFilter(f) {
+  mapFilter = f;
+  document.querySelectorAll('.map-filter-btn').forEach(b=>b.classList.toggle('active', b.dataset.f===f));
+  updateMapMarkers();
+}
+
+function initMap() {
+  if (mapInited) {
+    setTimeout(() => { leafletMap.invalidateSize(); updateMapMarkers(); }, 150);
+    return;
+  }
+  mapInited = true;
+  setTimeout(() => {
+    leafletMap = L.map('leafletMap', {zoomControl:true}).setView([30, 10], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    }).addTo(leafletMap);
+    updateMapMarkers();
+  }, 200);
+}
+
+function updateMapMarkers() {
+  if (!leafletMap) return;
+
+  // Clear existing markers
+  mapMarkers.forEach(m => leafletMap.removeLayer(m));
+  mapMarkers = [];
+
+  // Group trips by city coords
+  const cityMap = {};
+  TRIPS.forEach(r => {
+    const travelers = TRAVELERS.filter(t => r[t] > 0);
+    if (mapFilter !== 'all' && !travelers.includes(mapFilter)) return;
+
+    const cityLookup = (name) => {
+      if (!name) return null;
+      if (AIRPORT_COORDS[name]) return AIRPORT_COORDS[name];
+      const lower = name.toLowerCase();
+      const key = Object.keys(AIRPORT_COORDS).find(k => k.toLowerCase() === lower);
+      return key ? AIRPORT_COORDS[key] : null;
+    };
+    let coords = cityLookup(r.City);
+    if (!coords) {
+      const firstCity = r.City.split(',')[0].trim();
+      coords = cityLookup(firstCity);
+    }
+    if (!coords) return;
+
+    const key = coords[0].toFixed(3) + ',' + coords[1].toFixed(3);
+    if (!cityMap[key]) cityMap[key] = {coords, country:r.Country, trips:[]};
+    cityMap[key].trips.push(r);
+  });
+
+  const count = Object.keys(cityMap).length;
+  document.getElementById('mapCount').textContent = `${count} destination${count!==1?'s':''}`;
+
+  Object.values(cityMap).forEach(({coords, country, trips}) => {
+    const visits = trips.length;
+
+    // Custom circle marker — size scales with visit count
+    const radius = Math.min(18, 8 + visits * 2);
+    const marker = L.circleMarker([coords[0], coords[1]], {
+      radius,
+      fillColor: '#D82F2E',
+      color: '#fff',
+      weight: 1.5,
+      opacity: 1,
+      fillOpacity: 0.85
+    });
+
+    // Build popup content
+    const tripRows = trips.slice(0, 8).map(r => {
+      const travelersHtml = TRAVELERS.filter(t=>r[t]>0).map(t => {
+        const [bg,fg] = (TAG_COLORS[t]||'#eee|#333').split('|');
+        return `<span class="mp-tag" style="background:${bg};color:${fg}">${t}</span>`;
+      }).join('');
+      const dateStr = r.Month ? `${MONTHS_M[r.Month]} ${r.Year}` : `${r.Year}`;
+      const adjTag = r.Adj ? ' <span style="font-size:9px;color:#A8A8A8">(leg)</span>' : '';
+      return `<div class="mp-trip">
+        <div><strong>${r.City}</strong>${adjTag} — ${dateStr}</div>
+        <div class="mp-travelers">${travelersHtml}</div>
+      </div>`;
+    }).join('');
+    const more = trips.length > 8 ? `<div style="font-size:11px;color:#A8A8A8;margin-top:4px">+${trips.length-8} more visits</div>` : '';
+
+    const popup = L.popup({maxWidth:260, className:'tj-popup'}).setContent(`
+      <div class="map-popup">
+        <div class="mp-country">${country}</div>
+        ${tripRows}${more}
+      </div>
+    `);
+
+    marker.bindPopup(popup);
+    marker.addTo(leafletMap);
+    mapMarkers.push(marker);
+  });
+}
+</script>
 
 </body></html>
